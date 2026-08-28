@@ -1,0 +1,423 @@
+/* ══════════════════════════════════════════════════════════
+   AURA OS — Academic Analytics & Student Intelligence Dashboard
+   ══════════════════════════════════════════════════════════ */
+
+.analytics-container {
+  padding: 24px;
+  background-color: #0b132b;
+  min-height: 100vh;
+  color: #e2e8f0;
+  font-family: inherit;
+}
+
+/* Header */
+.analytics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.analytics-header-title h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+}
+
+.analytics-header-title p {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.analytics-breadcrumb {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.analytics-breadcrumb span {
+  color: #38bdf8;
+}
+
+.analytics-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.analytics-select {
+  background-color: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.875rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.analytics-btn {
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+}
+
+.analytics-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.analytics-btn-outline {
+  background-color: transparent;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+}
+
+.analytics-btn-outline:hover {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+/* KPI Cards Grid */
+.analytics-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.analytics-kpi-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.analytics-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: #38bdf8;
+}
+
+.analytics-kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #94a3b8;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.analytics-kpi-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.analytics-kpi-val {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 10px 0 4px 0;
+}
+
+.analytics-kpi-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.analytics-kpi-sub.positive {
+  color: #4ade80;
+}
+
+.analytics-kpi-sub.warning {
+  color: #fbbf24;
+}
+
+/* Card Wrapper */
+.analytics-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.analytics-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Two Column Grid */
+.analytics-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .analytics-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Academic Health Score */
+.health-score-container {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.health-score-badge {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 6px solid #38bdf8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #0f172a;
+}
+
+.health-score-num {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #38bdf8;
+  line-height: 1;
+}
+
+.health-score-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.health-breakdown {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.health-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+}
+
+.health-bar-bg {
+  width: 100%;
+  height: 8px;
+  background-color: #0f172a;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.health-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+}
+
+/* Tables */
+.analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.analytics-table th,
+.analytics-table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid #334155;
+}
+
+.analytics-table th {
+  color: #94a3b8;
+  font-weight: 600;
+  background-color: #0f172a;
+}
+
+.analytics-table td {
+  color: #e2e8f0;
+}
+
+/* Badges */
+.analytics-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.analytics-status-badge.safe,
+.analytics-status-badge.excellent {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.analytics-status-badge.warning,
+.analytics-status-badge.good {
+  background-color: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+.analytics-status-badge.critical,
+.analytics-status-badge.needs-attention {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* Simulator Sliders */
+.sim-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sim-slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sim-slider-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: #cbd5e1;
+}
+
+.sim-slider-input {
+  width: 100%;
+  accent-color: #38bdf8;
+  cursor: pointer;
+}
+
+/* AURA AI Section */
+.aura-ai-box {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+  border: 1px solid #6366f1;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.aura-ai-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #a5b4fc;
+  margin-bottom: 16px;
+}
+
+.aura-ai-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.aura-ai-card {
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.aura-ai-card h4 {
+  font-size: 0.8125rem;
+  color: #818cf8;
+  margin: 0 0 6px 0;
+  font-weight: 600;
+}
+
+.aura-ai-card p {
+  font-size: 0.8125rem;
+  color: #cbd5e1;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Recommended Actions */
+.rec-actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rec-action-item {
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.rec-action-priority {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.rec-action-priority.high {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.rec-action-priority.medium {
+  background-color: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+
+.rec-action-priority.low {
+  background-color: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+}
+
+.rec-action-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.rec-action-reason {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}

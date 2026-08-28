@@ -1,0 +1,21 @@
+import api from './api';
+
+// ─── Settings ──────────────────────────────────────────────
+export const getSettings = async () => {
+  const response = await api.get('/settings');
+  return response.data;
+};
+
+export const updateSettings = async (data) => {
+  const response = await api.put('/settings', data);
+  return response.data;
+};
+
+// ─── Password ──────────────────────────────────────────────
+export const changePassword = async ({ currentPassword, newPassword }) => {
+  const response = await api.put('/auth/change-password', {
+    currentPassword,
+    newPassword,
+  });
+  return response.data;
+};
