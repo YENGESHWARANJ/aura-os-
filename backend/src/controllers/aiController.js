@@ -2,16 +2,31 @@ const aiService = require("../services/aiService");
 
 exports.chat = async (req, res) => {
   try {
-    const { conversationId, message, mode } = req.body;
+    const { conversationId, message, mode, language } = req.body;
     if (!message) {
       return res.status(400).json({ success: false, message: "Message is required" });
     }
 
-    const data = await aiService.processChat(req.user.id, conversationId, message, mode);
+    const data = await aiService.processChat(req.user.id, conversationId, message, mode, language);
     res.json({ success: true, data });
   } catch (err) {
     console.error("AI Chat Controller error:", err);
     res.status(500).json({ success: false, message: "AI Assistant failed to process request" });
+  }
+};
+
+exports.translate = async (req, res) => {
+  try {
+    const { text, sourceLang = "en", targetLang = "ta" } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ success: false, message: "Text to translate is required" });
+    }
+
+    const data = await aiService.translateText(text, sourceLang, targetLang);
+    res.json({ success: true, data });
+  } catch (err) {
+    console.error("AI Translate Controller error:", err);
+    res.status(500).json({ success: false, message: "Academic Translation failed" });
   }
 };
 
@@ -21,7 +36,7 @@ exports.getContext = async (req, res) => {
     res.json({ success: true, data: context });
   } catch (err) {
     console.error("AI Context error:", err);
-    res.status(500).json({ success: false, message: "Failed to load student context" });
+    res.status(500).json({ success: false, message: "Failed to load context" });
   }
 };
 

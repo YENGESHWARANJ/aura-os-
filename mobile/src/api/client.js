@@ -1,16 +1,38 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
+import Constants from "expo-constants";
+
+// Auto-detect Host IP from Expo when running via Expo Go on physical phone / emulator
+const getExpoHostIp = () => {
+  try {
+    const hostUri =
+      Constants.expoConfig?.hostUri ||
+      Constants.manifest2?.extra?.expoGo?.debuggerHost;
+    if (hostUri) {
+      return hostUri.split(":")[0];
+    }
+  } catch (e) {
+    // Ignore error
+  }
+  return null;
+};
+
+const detectedHostIp = getExpoHostIp();
 
 // Default API URL:
-// For Android Emulator: 10.0.2.2:5000
-// For iOS Simulator / Web: localhost:5000
-// Fallback: localhost:5000
-export const DEFAULT_API_URL = Platform.select({
-  android: "http://10.0.2.2:5000/api/v1",
-  ios: "http://localhost:5000/api/v1",
-  default: "http://localhost:5000/api/v1",
-});
+// 1. EXPO_PUBLIC_API_URL from .env
+// 2. Auto-detected LAN IP if running on Expo Go (physical device / emulator)
+// 3. Platform fallback (Android emulator 10.0.2.2 or localhost)
+export const DEFAULT_API_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  (detectedHostIp
+    ? `http://${detectedHostIp}:5000/api/v1`
+    : Platform.select({
+        android: "http://10.0.2.2:5000/api/v1",
+        ios: "http://localhost:5000/api/v1",
+        default: "http://localhost:5000/api/v1",
+      }));
 
 let currentBaseUrl = DEFAULT_API_URL;
 

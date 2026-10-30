@@ -61,6 +61,7 @@ function validateForm(form) {
 function userToForm(user) {
   if (!user) return {};
   return {
+    _id: user._id || "",
     name: user.name || "",
     phone: user.phone || "",
     bio: user.bio || "",

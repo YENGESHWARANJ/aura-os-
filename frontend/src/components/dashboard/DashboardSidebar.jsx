@@ -26,6 +26,7 @@ import {
   MessageSquare,
   X,
   Shield,
+  ShieldCheck,
 } from "lucide-react";
 
 // Standard Student Navigation Items
@@ -38,6 +39,9 @@ const studentNavItems = [
   { label: "Skills", to: "/dashboard/skills", icon: Award },
   { label: "Study Planner", to: "/dashboard/study-planner", icon: Calendar },
   { label: "Analytics", to: "/dashboard/analytics", icon: BarChart3 },
+  { label: "AI Simulator", to: "/dashboard/intervention-simulator", icon: Sparkles },
+  { label: "Curriculum Intel", to: "/dashboard/curriculum-intelligence", icon: BookOpen },
+  { label: "Evidence Wallet", to: "/dashboard/evidence-wallet", icon: ShieldCheck },
   { label: "AI Assistant", to: "/dashboard/ai", icon: Bot },
   { label: "Notifications", to: "/dashboard/notifications", icon: Bell },
   { label: "Profile", to: "/dashboard/profile", icon: User },
@@ -61,6 +65,8 @@ const mentorNavGroups = [
       { label: "Notes", to: "/mentor/notes", icon: FileCode },
       { label: "Goals", to: "/mentor/goals", icon: Target },
       { label: "Recommendations", to: "/mentor/recommendations", icon: Sparkles },
+      { label: "Intervention Sim", to: "/mentor/interventions", icon: Sparkles },
+      { label: "Verify Evidence", to: "/mentor/evidence-verification", icon: ShieldCheck },
     ],
   },
   {
@@ -102,6 +108,7 @@ const facultyNavGroups = [
       { label: "Assessments", to: "/faculty/assessments", icon: Award },
       { label: "Marks & Grades", to: "/faculty/marks", icon: PieChart },
       { label: "Course Materials", to: "/faculty/materials", icon: FolderGit2 },
+      { label: "Curriculum Intel", to: "/faculty/curriculum-intelligence", icon: Sparkles },
     ],
   },
   {
@@ -109,6 +116,7 @@ const facultyNavGroups = [
     items: [
       { label: "At-Risk Students", to: "/faculty/risk-students", icon: AlertTriangle },
       { label: "Student Feedback", to: "/faculty/feedback", icon: MessageSquare },
+      { label: "Verify Evidence", to: "/faculty/evidence-verification", icon: ShieldCheck },
     ],
   },
   {
@@ -139,7 +147,7 @@ const parentNavItems = [
   { label: "Parent Dashboard", to: "/parent/dashboard", icon: LayoutDashboard },
   { label: "Child Attendance", to: "/parent/attendance", icon: UserCheck },
   { label: "Parent Alerts", to: "/parent/notifications", icon: Bell },
-  { label: "AI Advisory", to: "/dashboard/ai", icon: Bot },
+  { label: "AI Advisory & Translator", to: "/parent/ai", icon: Bot },
   { label: "Profile", to: "/dashboard/profile", icon: User },
   { label: "Settings", to: "/dashboard/settings", icon: Settings },
 ];
@@ -162,7 +170,7 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
   };
 
   const handleLinkClick = () => {
-    if (onClose) onClose();
+    if (isMobile && onClose) onClose();
   };
 
   const containerClasses = isMobile
@@ -188,10 +196,11 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
                 </h2>
               </div>
             </div>
-            {isMobile && (
+            {onClose && (
               <button
                 onClick={onClose}
-                className="h-8 w-8 rounded-lg bg-[var(--aura-surface-2)] border border-[var(--aura-border)] flex items-center justify-center text-[var(--aura-text-muted)] hover:text-[var(--aura-text)]"
+                title="Close sidebar"
+                className="h-8 w-8 rounded-lg bg-[var(--aura-surface-2)] border border-[var(--aura-border)] flex items-center justify-center text-[var(--aura-text-muted)] hover:text-[var(--aura-text)] hover:border-cyan-500/30 transition cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -216,13 +225,13 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
                         onClick={handleLinkClick}
                         className={`flex items-center gap-3 h-10 rounded-xl px-3 font-semibold transition-all duration-200 ${
                           isActive
-                            ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-500/20 text-white-force"
+                            ? "bg-[#c8f000] text-[#0d1a00] shadow-md shadow-[#c8f000]/20"
                             : "text-[var(--aura-text-secondary)] hover:bg-[var(--aura-surface-2)] hover:text-[var(--aura-text)]"
                         }`}
                       >
                         <Icon
                           className={`h-4 w-4 shrink-0 ${
-                            isActive ? "text-white text-white-force" : "text-[var(--aura-text-muted)]"
+                            isActive ? "text-[#0d1a00]" : "text-[var(--aura-text-muted)]"
                           }`}
                         />
                         <span className="truncate">{item.label}</span>
@@ -237,12 +246,12 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
 
         <div className="space-y-3 pt-4 border-t border-[var(--aura-border)] shrink-0 mt-4">
           <div className="flex items-center gap-3 rounded-xl bg-[var(--aura-surface-2)] border border-[var(--aura-border)] p-2.5">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-sm text-white-force">
+            <div className="h-8 w-8 rounded-full bg-[#c8f000] flex items-center justify-center font-bold text-[#0d1a00] text-xs shrink-0 shadow-sm">
               {userInitial}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold text-[var(--aura-text)] truncate">{userName}</p>
-              <p className="text-[10px] text-cyan-500 font-semibold capitalize truncate">{userRole}</p>
+              <p className="text-[10px] text-[#c8f000] font-semibold capitalize truncate">{userRole}</p>
             </div>
           </div>
 
@@ -277,10 +286,11 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
                 </h2>
               </div>
             </div>
-            {isMobile && (
+            {onClose && (
               <button
                 onClick={onClose}
-                className="h-8 w-8 rounded-lg bg-[var(--aura-surface-2)] border border-[var(--aura-border)] flex items-center justify-center text-[var(--aura-text-muted)] hover:text-[var(--aura-text)]"
+                title="Close sidebar"
+                className="h-8 w-8 rounded-lg bg-[var(--aura-surface-2)] border border-[var(--aura-border)] flex items-center justify-center text-[var(--aura-text-muted)] hover:text-[var(--aura-text)] hover:border-purple-500/30 transition cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -305,13 +315,13 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
                         onClick={handleLinkClick}
                         className={`flex items-center gap-3 h-10 rounded-xl px-3 font-semibold transition-all duration-200 ${
                           isActive
-                            ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/20 text-white-force"
+                            ? "bg-[#c8f000] text-[#0d1a00] shadow-md shadow-[#c8f000]/20"
                             : "text-[var(--aura-text-secondary)] hover:bg-[var(--aura-surface-2)] hover:text-[var(--aura-text)]"
                         }`}
                       >
                         <Icon
                           className={`h-4 w-4 shrink-0 ${
-                            isActive ? "text-white text-white-force" : "text-[var(--aura-text-muted)]"
+                            isActive ? "text-[#0d1a00]" : "text-[var(--aura-text-muted)]"
                           }`}
                         />
                         <span className="truncate">{item.label}</span>
@@ -326,12 +336,12 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
 
         <div className="space-y-3 pt-4 border-t border-[var(--aura-border)] shrink-0 mt-4">
           <div className="flex items-center gap-3 rounded-xl bg-[var(--aura-surface-2)] border border-[var(--aura-border)] p-2.5">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-sm text-white-force">
+            <div className="h-8 w-8 rounded-full bg-[#c8f000] flex items-center justify-center font-bold text-[#0d1a00] text-xs shrink-0 shadow-sm">
               {userInitial}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold text-[var(--aura-text)] truncate">{userName}</p>
-              <p className="text-[10px] text-purple-500 font-semibold capitalize truncate">{userRole}</p>
+              <p className="text-[10px] text-[#c8f000] font-semibold capitalize truncate">{userRole}</p>
             </div>
           </div>
 
@@ -366,10 +376,11 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
                 </h2>
               </div>
             </div>
-            {isMobile && (
+            {onClose && (
               <button
                 onClick={onClose}
-                className="h-8 w-8 rounded-lg bg-[var(--aura-surface-2)] border border-[var(--aura-border)] flex items-center justify-center text-[var(--aura-text-muted)] hover:text-[var(--aura-text)]"
+                title="Close sidebar"
+                className="h-8 w-8 rounded-lg bg-[var(--aura-surface-2)] border border-[var(--aura-border)] flex items-center justify-center text-[var(--aura-text-muted)] hover:text-[var(--aura-text)] hover:border-amber-500/30 transition cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -387,11 +398,11 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
                   onClick={handleLinkClick}
                   className={`flex items-center gap-3 h-10 rounded-xl px-3 font-semibold transition-all ${
                     isActive
-                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/20 text-white-force"
+                      ? "bg-[#c8f000] text-[#0d1a00] shadow-md shadow-[#c8f000]/20"
                       : "text-[var(--aura-text-secondary)] hover:bg-[var(--aura-surface-2)] hover:text-[var(--aura-text)]"
                   }`}
                 >
-                  <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-white text-white-force" : "text-[var(--aura-text-muted)]"}`} />
+                  <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-[#0d1a00]" : "text-[var(--aura-text-muted)]"}`} />
                   <span className="truncate">{item.label}</span>
                 </Link>
               );
@@ -401,12 +412,12 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
 
         <div className="space-y-3 pt-4 border-t border-[var(--aura-border)] shrink-0 mt-4">
           <div className="flex items-center gap-3 rounded-xl bg-[var(--aura-surface-2)] border border-[var(--aura-border)] p-2.5">
-            <div className="h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center font-bold text-white text-xs shrink-0 text-white-force">
+            <div className="h-8 w-8 rounded-full bg-[#c8f000] flex items-center justify-center font-bold text-[#0d1a00] text-xs shrink-0">
               {userInitial}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold text-[var(--aura-text)] truncate">{userName}</p>
-              <p className="text-[10px] text-amber-500 font-semibold capitalize truncate">{userRole}</p>
+              <p className="text-[10px] text-[#c8f000] font-semibold capitalize truncate">{userRole}</p>
             </div>
           </div>
 
@@ -428,11 +439,11 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
       <div>
         <div className="mb-6 px-1 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-500 shadow-xs">
+            <div className="h-10 w-10 rounded-xl bg-[#c8f000]/10 border border-[#c8f000]/30 flex items-center justify-center text-[#c8f000] shadow-xs">
               <Shield className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-500">
+              <p className="text-[10px] font-extrabold uppercase tracking-widest text-[#c8f000]">
                 AURA OS
               </p>
               <h2 className="text-sm font-extrabold tracking-tight text-[var(--aura-text)]">
@@ -440,10 +451,11 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
               </h2>
             </div>
           </div>
-          {isMobile && (
+          {onClose && (
             <button
               onClick={onClose}
-              className="h-8 w-8 rounded-lg bg-[var(--aura-surface-2)] border border-[var(--aura-border)] flex items-center justify-center text-[var(--aura-text-muted)] hover:text-[var(--aura-text)]"
+              title="Close sidebar"
+              className="h-8 w-8 rounded-lg bg-[var(--aura-surface-2)] border border-[var(--aura-border)] flex items-center justify-center text-[var(--aura-text-muted)] hover:text-[var(--aura-text)] hover:border-[#c8f000]/30 transition cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -462,13 +474,13 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
                 onClick={handleLinkClick}
                 className={`flex items-center gap-3 h-10 rounded-xl px-3 font-semibold transition-all duration-200 ${
                   isActive
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/20 text-white-force"
+                    ? "bg-[#c8f000] text-[#0d1a00] shadow-md shadow-[#c8f000]/20"
                     : "text-[var(--aura-text-secondary)] hover:bg-[var(--aura-surface-2)] hover:text-[var(--aura-text)]"
                 }`}
               >
                 <Icon
                   className={`h-4 w-4 shrink-0 ${
-                    isActive ? "text-white text-white-force" : "text-[var(--aura-text-muted)]"
+                    isActive ? "text-[#0d1a00]" : "text-[var(--aura-text-muted)]"
                   }`}
                 />
                 <span className="truncate">{item.label}</span>
@@ -480,12 +492,12 @@ export default function DashboardSidebar({ onClose, isMobile = false }) {
 
       <div className="space-y-3 pt-4 border-t border-[var(--aura-border)] mt-4">
         <div className="flex items-center gap-3 rounded-xl bg-[var(--aura-surface-2)] border border-[var(--aura-border)] p-2.5">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-sm text-white-force">
+          <div className="h-8 w-8 rounded-full bg-[#c8f000] flex items-center justify-center font-bold text-[#0d1a00] text-xs shrink-0 shadow-sm">
             {userInitial}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold text-[var(--aura-text)] truncate">{userName}</p>
-            <p className="text-[10px] text-indigo-500 font-semibold capitalize truncate">{userRole}</p>
+            <p className="text-[10px] text-[#c8f000] font-semibold capitalize truncate">{userRole}</p>
           </div>
         </div>
 

@@ -21,3 +21,24 @@ export const markAllNotificationsAsRead = () => {
 export const deleteNotification = (notificationId) => {
   return api.delete(`/notifications/${notificationId}`);
 };
+
+// Multi-Channel Notification APIs
+export const registerDeviceToken = (payload) => {
+  return api.post("/notifications/device-token/register", payload);
+};
+
+export const unregisterDeviceToken = (deviceToken) => {
+  return api.post("/notifications/device-token/unregister", { deviceToken });
+};
+
+export const getNotificationPreferences = () => {
+  return api.get("/notifications/preferences");
+};
+
+export const updateNotificationPreferences = (preferences) => {
+  return api.put("/notifications/preferences", preferences);
+};
+
+export const sendTestNotification = (payload = {}) => {
+  return api.post("/notifications/send-test", payload);
+};

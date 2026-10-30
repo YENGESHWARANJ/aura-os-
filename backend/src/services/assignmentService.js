@@ -1,4 +1,5 @@
 const Assignment = require("../models/Assignment");
+const { createAlertNotification } = require("./alertEngine");
 const User = require("../models/User");
 
 // Seed realistic sample assignments if database has zero assignments
@@ -355,6 +356,42 @@ const submitAssignment = async (studentId, assignmentId, fileData, notes) => {
   }
 
   await assignment.save();
+
+  createAlertNotification({
+    recipient: studentId,
+    type: "ASSIGNMENT_SUBMISSION",
+    title: "Assignment submitted successfully",
+    message: `Your submission for ${assignment.title} was received${isLate ? " after the deadline" : ""}.`,
+    targetRoute: `/dashboard/assignments/${assignmentId}`,
+    priority: isLate ? "high" : "medium",
+    data: {
+      assignmentId: String(assignmentId),
+      submittedAt: now.toISOString(),
+      isLate,
+    },
+    idempotencyKey: `assignment-submission:${assignmentId}:${studentId}:${now.getTime()}`,
+  }).catch((error) => {
+    console.warn("[AssignmentService] Submission notification failed:", error.message || error);
+  });
+
+  if (assignment.facultyId) {
+    createAlertNotification({
+      recipient: assignment.facultyId,
+      type: "ASSIGNMENT_SUBMISSION",
+      title: "New assignment submission",
+      message: `A student submitted ${assignment.title} for review.`,
+      targetRoute: `/dashboard/assignments/${assignmentId}`,
+      priority: "medium",
+      data: {
+        assignmentId: String(assignmentId),
+        studentId: String(studentId),
+      },
+      idempotencyKey: `assignment-submission-faculty:${assignmentId}:${studentId}:${now.getTime()}`,
+    }).catch((error) => {
+      console.warn("[AssignmentService] Faculty notification failed:", error.message || error);
+    });
+  }
+
   return getAssignmentById(studentId, assignmentId);
 };
 

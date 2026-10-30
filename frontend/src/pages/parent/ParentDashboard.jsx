@@ -45,22 +45,47 @@ const RECENT_NOTIFICATIONS = [
 
 export default function ParentDashboard() {
   const [child] = useState(MOCK_CHILD);
+  const [lang, setLang] = useState("en");
+  const translations = {
+    en: {
+      eyebrow: "Parent Portal",
+      title: "Parent Academic Dashboard",
+      description: `Real-time academic performance, attendance, and mentor updates for ${child.name}.`,
+      verified: "Verified Parent Account",
+    },
+    ta: {
+      eyebrow: "பெற்றோர் போர்டல்",
+      title: "பெற்றோர் கல்வியியல் டாஷ்போர்டு",
+      description: `நேரடி கல்வி செயல்திறன், வருகை, மற்றும் ஆசிரியர் புதுப்பிப்புகள் ${child.name} க்கு` ,
+      verified: "சரிபார்க்கப்பட்ட பெற்றோர் கணக்கு",
+    },
+  };
+
+  const t = translations[lang];
 
   return (
     <div className="w-full">
       <PageHeader
-        eyebrow="Parent Portal"
-        title="Parent Academic Dashboard"
-        description={`Real-time academic performance, attendance, and mentor updates for ${child.name}.`}
+        eyebrow={t.eyebrow}
+        title={t.title}
+        description={t.description}
         actions={
           <div className="flex items-center gap-2">
             <span className="aura-badge aura-badge-success flex items-center gap-1.5 py-1 px-3">
               <ShieldCheck className="h-3.5 w-3.5" />
-              Verified Parent Account
+              {t.verified}
             </span>
+            <button
+              className="aura-btn aura-btn-secondary py-1 px-2 text-xs"
+              onClick={() => setLang(lang === "en" ? "ta" : "en")}
+            >
+              {lang === "en" ? "தமிழில்" : "English"}
+            </button>
           </div>
         }
       />
+
+
 
       {/* Student Profile Card */}
       <div className="aura-card mb-6 bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950">

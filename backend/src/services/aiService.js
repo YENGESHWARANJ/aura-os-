@@ -8,27 +8,30 @@ const StudyTask = require("../models/StudyTask");
 const StudySession = require("../models/StudySession");
 const StudyGoal = require("../models/StudyGoal");
 const llmEngine = require("../modules/llm/LLMEngine");
+const translatorService = require("./translatorService");
 
-// ─── Intent Router ─────────────────────────────────────────
+// ─── Intent Router (English & Tamil) ─────────────────────────
 function detectIntent(message, mode) {
   const m = message.toLowerCase().trim();
 
-  if (m.startsWith("/attendance") || m.includes("attendance") || m.includes("class")) return "ATTENDANCE_ANALYSIS";
-  if (m.startsWith("/assignments") || m.includes("assignment") || m.includes("due")) return "ASSIGNMENT_HELP";
-  if (m.startsWith("/study") || m.includes("study plan") || m.includes("schedule") || m.includes("focus")) return "STUDY_PLANNING";
-  if (m.startsWith("/skills") || m.includes("skill") || m.includes("learn") || m.includes("roadmap")) return "SKILL_ANALYSIS";
-  if (m.startsWith("/projects") || m.includes("project") || m.includes("milestone")) return "PROJECT_GUIDANCE";
-  if (m.startsWith("/performance") || m.includes("performance") || m.includes("gpa") || m.includes("cgpa") || m.includes("grade")) return "ACADEMIC_ANALYSIS";
-  if (m.startsWith("/risk") || m.includes("risk") || m.includes("warning")) return "RISK_ANALYSIS";
-  if (m.startsWith("/career") || m.includes("career") || m.includes("job") || m.includes("placement")) return "CAREER_GUIDANCE";
+  if (m.startsWith("/attendance") || m.includes("attendance") || m.includes("class") || m.includes("வருகை") || m.includes("வகுப்பு") || m.includes("ஆப்சென்ட்") || m.includes("பிரசன்ட்")) return "ATTENDANCE_ANALYSIS";
+  if (m.startsWith("/assignments") || m.includes("assignment") || m.includes("due") || m.includes("பணி") || m.includes("வீட்டுப்பாடம்") || m.includes("ஹோம்வொர்க்")) return "ASSIGNMENT_HELP";
+  if (m.startsWith("/study") || m.includes("study plan") || m.includes("schedule") || m.includes("focus") || m.includes("படிப்பு") || m.includes("திட்டம்") || m.includes("நேர அட்டவணை")) return "STUDY_PLANNING";
+  if (m.startsWith("/skills") || m.includes("skill") || m.includes("learn") || m.includes("roadmap") || m.includes("திறன்") || m.includes("கற்றல்")) return "SKILL_ANALYSIS";
+  if (m.startsWith("/projects") || m.includes("project") || m.includes("milestone") || m.includes("ப்ராஜெக்ட்") || m.includes("திட்டப்பணி")) return "PROJECT_GUIDANCE";
+  if (m.startsWith("/performance") || m.includes("performance") || m.includes("gpa") || m.includes("cgpa") || m.includes("grade") || m.includes("மதிப்பெண்") || m.includes("தேர்வு") || m.includes("ரிசல்ட்")) return "ACADEMIC_ANALYSIS";
+  if (m.startsWith("/risk") || m.includes("risk") || m.includes("warning") || m.includes("அபாயம்") || m.includes("எச்சரிக்கை") || m.includes("குறைபாடு")) return "RISK_ANALYSIS";
+  if (m.startsWith("/mentor") || m.includes("mentor") || m.includes("teacher") || m.includes("சுரேஷ்") || m.includes("ஆசிரியர்") || m.includes("சந்திப்பு") || m.includes("கலந்தாய்வு")) return "MENTOR_GUIDANCE";
+  if (m.startsWith("/translate") || m.includes("translate") || m.includes("மொழிபெயர்") || m.includes("மொழிபெயர்ப்பு") || m.includes("சுற்றறிக்கை")) return "TRANSLATION_TOOL";
+  if (m.startsWith("/career") || m.includes("career") || m.includes("job") || m.includes("placement") || m.includes("வேலை") || m.includes("கேம்பஸ்")) return "CAREER_GUIDANCE";
   if (m.includes("code") || m.includes("debug") || m.includes("java") || m.includes("python") || m.includes("react")) return "CODING_HELP";
-  if (m.includes("explain") || m.includes("what is") || m.includes("how does") || m.includes("understand")) return "TOPIC_EXPLANATION";
+  if (m.includes("explain") || m.includes("what is") || m.includes("how does") || m.includes("விளக்கு") || m.includes("என்ன")) return "TOPIC_EXPLANATION";
   if (m.includes("research") || m.includes("paper")) return "RESEARCH_HELP";
 
   return "GENERAL_CHAT";
 }
 
-// ─── Lightweight Context Query ─────────────────────────────
+// ─── Lightweight Context Query (Parent & Student Aware) ──────
 exports.getStudentContext = async (userId) => {
   const user = await User.findById(userId).lean();
   const assignments = await Assignment.find({}).lean();
@@ -37,210 +40,398 @@ exports.getStudentContext = async (userId) => {
   const studyTasks = await StudyTask.find({ student: userId }).lean();
   const studyGoals = await StudyGoal.find({ student: userId }).lean();
 
+  const isParent = user?.role === "parent";
+
   const userSubmissions = assignments.filter((a) =>
     a.submissions && a.submissions.some((s) => String(s.student) === String(userId))
   );
 
-  const pendingAssignments = (assignments.length || 5) - userSubmissions.length;
-  const attendancePct = user?.attendance || 86;
-  const cgpa = user?.cgpa || 8.42;
-  const activeProjects = projects.filter((p) => p.available).length || 2;
+  const pendingAssignments = isParent ? 1 : Math.max(0, (assignments.length || 5) - userSubmissions.length);
+  const attendancePct = isParent ? 84 : (user?.attendance || 86);
+  const cgpa = isParent ? 8.80 : (user?.cgpa || 8.42);
+  const activeProjects = isParent ? 2 : (projects.filter((p) => p.available).length || 2);
   const skillCount = skills.length || 5;
 
-  let riskLevel = "Low";
+  let riskLevel = "Safe";
   if (attendancePct < 75 || pendingAssignments > 4) riskLevel = "High";
   else if (attendancePct < 80 || pendingAssignments > 2) riskLevel = "Moderate";
 
   return {
-    studentName: user?.name || "Student",
+    isParent,
+    parentName: isParent ? (user?.name || "Robert Johnson") : null,
+    childName: isParent ? "Alex Johnson" : (user?.name || "Student"),
+    rollNumber: isParent ? "22AI701" : (user?.rollNumber || "AURA2026AI010"),
+    department: "Artificial Intelligence & Data Science",
+    semester: isParent ? "Semester 7" : (user?.semester ? `Semester ${user.semester}` : "Semester 6"),
+    mentorName: "Dr. Suresh R",
+    mentorContact: "+91 98765 43210",
+    studentName: isParent ? "Alex Johnson" : (user?.name || "Student"),
     cgpa,
     attendance: attendancePct,
-    pendingAssignments: Math.max(0, pendingAssignments),
+    pendingAssignments,
     studyProgress: 78,
-    skillProgress: skillCount > 0 ? 72 : 0,
+    skillProgress: isParent ? 78 : (skillCount > 0 ? 72 : 0),
     activeProjects,
     risk: riskLevel,
   };
 };
 
-// ─── Deterministic Response Engine ──────────────────────────
-async function buildDeterministicResponse(userId, intent, messageText, context) {
-  const sources = ["Local MongoDB"];
+// ─── Deterministic Response Engine (English & Tamil) ─────────
+async function buildDeterministicResponse(userId, intent, messageText, context, isTamil = false) {
+  const sources = ["Local MongoDB", "Academic Records"];
+  const name = context.isParent ? context.childName : context.studentName;
 
+  // 1. ATTENDANCE ANALYSIS
   if (intent === "ATTENDANCE_ANALYSIS") {
     const isSafe = context.attendance >= 75;
+
+    if (isTamil) {
+      return {
+        content: `### 📅 குழந்தையின் வருகைப் பதிவு அறிக்கை (Attendance Analysis)\n\n- **மாணவர்**: **${name}** (${context.rollNumber})\n- **ஒட்டுமொத்த வருகை**: **${context.attendance}%** (${isSafe ? "பாதுகாப்பானது / Safe" : "கவனிக்கத்தக்க நிலை / Warning"})\n- **குறைந்தபட்ச தேவை**: 75%\n\n${
+          isSafe
+            ? `✅ **நற்செய்தி**: ${name}-ன் ஒட்டுமொத்த வருகை பல்கலைக்கழக நிர்ணயித்த 75% அளவை விட **+9% கூடுதலாக** உள்ளது. மாணவர் சீராக வகுப்புகளுக்கு வந்து கொண்டிருக்கிறார்.`
+            : `⚠️ **எச்சரிக்கை**: மாணவரின் வருகை 75% க்கும் கீழே குறைந்துள்ளது. அடுத்த 4 தொடர் வகுப்புகளில் கலந்துகொண்டால் மட்டுமே பாதுகாப்பான நிலைக்கு திரும்ப முடியும்.`
+        }\n\n**பாடவாரி வருகை நிலவரம்**:\n1. இயற்கை மொழி செயலாக்கம் (NLP): **92%** (சிறப்பானது)\n2. தரவு காட்சிப்படுத்தல் (Data Viz): **88%** (பாதுகாப்பானது)\n3. கணினி பார்வை (Computer Vision): **78%** (சரிபார்ப்பு தேவை)\n4. பெருந்தரவு பகுப்பாய்வு (Big Data Analytics): **71%** (⚠️ 75% க்கும் குறைவு)\n\n💡 **பெற்றோர் ஆலோசனை**: பெருந்தரவு பகுப்பாய்வு (Big Data) வகுப்பில் வருகை 71% ஆக உள்ளதால், அடுத்த 3 வகுப்புகளில் தவறாமல் கலந்துகொள்ள உங்கள் குழந்தையை ஊக்கப்படுத்தவும்.`,
+        type: "attendance_analysis",
+        actions: [{ label: "முழு வருகைப் பதிவு", route: "/parent/attendance" }],
+        cards: [
+          {
+            title: "ஒட்டுமொத்த வருகை",
+            badge: `${context.attendance}%`,
+            description: `${name} • ${isSafe ? "பாதுகாப்பானது" : "எச்சரிக்கை"}`,
+            status: isSafe ? "safe" : "warning",
+          },
+          {
+            title: "கவனிக்க வேண்டிய பாடம்",
+            badge: "71%",
+            description: "Big Data Analytics (குறைந்தபட்சம் 75% தேவை)",
+            status: "warning",
+          },
+        ],
+        sourcesUsed: [...sources, "Biometric Attendance Database"],
+      };
+    }
+
     return {
-      content: `### 📅 Attendance Analysis\n\n- **Overall Attendance**: **${context.attendance}%** (${isSafe ? "Safe" : "Critical"})\n- **Required Minimum**: 75%\n\n${
+      content: `### 📅 Child Attendance Analysis\n\n- **Student**: **${name}** (${context.rollNumber})\n- **Overall Attendance**: **${context.attendance}%** (${isSafe ? "Safe" : "Critical"})\n- **Required Minimum**: 75%\n\n${
         isSafe
-          ? "Your attendance is well above the required threshold (+11% margin). Keep up the consistency!"
-          : "⚠️ **Attendance Warning**: Operating Systems attendance is currently below 75%. You need to attend the next 4 consecutive classes to get back into the safe zone."
-      }`,
+          ? `✅ Overall attendance is well above the mandatory university threshold (+9% safe margin).`
+          : `⚠️ Attendance is currently below 75%. Student must attend consecutive upcoming classes to recover.`
+      }\n\n**Subject Breakdown**:\n- Natural Language Processing: **92%** (Safe)\n- Data Visualisation: **88%** (Safe)\n- Computer Vision: **78%** (Safe)\n- Big Data Analytics: **71%** (⚠️ Action Required)\n\n💡 **Parent Recommendation**: Encourage ${name} to attend the next 3 consecutive Big Data Analytics lectures to reach the 75% threshold.`,
       type: "attendance_analysis",
-      actions: [{ label: "View Attendance", route: "/dashboard/attendance" }],
+      actions: [{ label: "View Child Attendance", route: "/parent/attendance" }],
       cards: [
         {
-          title: "Attendance Status",
-          badge: isSafe ? "Safe" : "Critical",
-          description: `Overall: ${context.attendance}%`,
-          status: isSafe ? "safe" : "critical",
+          title: "Overall Attendance",
+          badge: `${context.attendance}%`,
+          description: isSafe ? "Safe Standing" : "Action Required",
+          status: isSafe ? "safe" : "warning",
         },
       ],
       sourcesUsed: [...sources, "Attendance Collection"],
     };
   }
 
-  if (intent === "ASSIGNMENT_HELP") {
+  // 2. ACADEMIC ANALYSIS
+  if (intent === "ACADEMIC_ANALYSIS") {
+    if (isTamil) {
+      return {
+        content: `### 📊 கல்வி செயல்திறன் & மதிப்பெண் விவரம் (Academic Performance)\n\n- **மாணவர்**: **${name}** (${context.rollNumber})\n- **தற்போதைய CGPA**: **${context.cgpa} / 10.0** (வகுப்பில் முதல் 5% மாணவர்களில் ஒருவர்)\n- **பருவ இடைத் தேர்வு (Mid-Term)**: **88% ஒட்டுமொத்த மதிப்பெண்கள்**\n\n**பாடவாரி சாதனைகள்**:\n- **இயற்கை மொழி செயலாக்கம் (NLP)**: 45/50 (தரம்: O - Outstanding)\n- **தரவு காட்சிப்படுத்தல்**: 42/50 (தரம்: A+)\n- **வலுவூட்டல் கற்றல்**: 40/50 (தரம்: A+)\n- **கணினி பார்வை**: 38/50 (தரம்: A)\n- **பெருந்தரவு பகுப்பாய்வு**: 32/50 (தரம்: B+)\n\n💡 **பெற்றோர் வழிகாட்டல்**: ${name}-ன் கல்வி திறன் மிகவும் திருப்திகரமாக உள்ளது. பிக் டேட்டா அனலிட்டிக்ஸ் பாடத்தில் மட்டும் சற்று கூடுதல் பயிற்சி தேவைப்படுகிறது.`,
+        type: "academic_analysis",
+        actions: [{ label: "கல்வி டாஷ்போர்டு", route: "/parent/dashboard" }],
+        cards: [
+          {
+            title: "தற்போதைய CGPA",
+            badge: `${context.cgpa} / 10.0`,
+            description: "First Class with Distinction",
+            status: "safe",
+          },
+          {
+            title: "மிட்-டெர்ம் தேர்வு",
+            badge: "88%",
+            description: "சிறப்பான செயல்திறன்",
+            status: "safe",
+          },
+        ],
+        sourcesUsed: [...sources, "Examination Portal", "Controller of Exams"],
+      };
+    }
+
     return {
-      content: `### 📝 Assignment Assistant\n\n- **Pending Assignments**: **${context.pendingAssignments}**\n- **Highest Priority**: DBMS Assignment (Due Tomorrow at 11:59 PM)\n\n**Recommended Action Plan**:\n1. Complete **DBMS Assignment** first (estimated 60 min).\n2. Review Machine Learning Quiz guidelines.\n\nWould you like me to add a study session for DBMS Assignment to your planner?`,
-      type: "assignment_help",
-      actions: [
-        { label: "Open Assignments", route: "/dashboard/assignments" },
-        { label: "Add Session to Planner", route: "/dashboard/study-planner", actionType: "ADD_PLANNER_TASK", payload: { title: "DBMS Assignment Revision", subject: "DBMS", estimatedMinutes: 60 } },
-      ],
+      content: `### 📊 Academic Performance Overview\n\n- **Student**: **${name}** (${context.rollNumber})\n- **Current CGPA**: **${context.cgpa} / 10.0** (Top 5% of Department)\n- **Mid-Term Examination Score**: **88% Overall**\n\n**Subject Breakdown**:\n- Natural Language Processing: **45/50** (Grade O)\n- Data Visualisation: **42/50** (Grade A+)\n- Reinforcement Learning: **40/50** (Grade A+)\n- Computer Vision: **38/50** (Grade A)\n- Big Data Analytics: **32/50** (Grade B+)\n\n💡 **Parent Insight**: Academic performance is solid. Slight revision in Big Data Analytics will easily push semester GPA above 9.0.`,
+      type: "academic_analysis",
+      actions: [{ label: "View Academic Dashboard", route: "/parent/dashboard" }],
       cards: [
         {
-          title: "DBMS Assignment",
-          badge: "Due Tomorrow",
-          description: "High Priority • Estimated: 60 min",
+          title: "Cumulative CGPA",
+          badge: `${context.cgpa}`,
+          description: "Top Tier Performance",
+          status: "safe",
+        },
+      ],
+      sourcesUsed: [...sources, "Academic Evaluation Engine"],
+    };
+  }
+
+  // 3. RISK ANALYSIS
+  if (intent === "RISK_ANALYSIS") {
+    if (isTamil) {
+      return {
+        content: `### ⚠️ கல்வி மற்றும் ஒழுங்கு அபாய ஆய்வு (Academic Risk Check)\n\n- **மாணவர்**: **${name}**\n- **ஒட்டுமொத்த அபாய நிலை**: **பாதுகாப்பானது (SAFE STATUS)**\n\n**ஆய்வு செய்யப்பட்ட காரணிகள்**:\n- **ஒழுக்கம் & வருகை**: 84% (பாதுகாப்பானது; ஆனால் Big Data-வில் 71% கவனம் தேவை)\n- **நிலுவை தேர்வுகள் / அரியர்ஸ்**: ஏதுமில்லை (0 Arrears)\n- **நிலுவை வீட்டுப்பாடங்கள்**: 1 பணி மட்டுமே நிலுவையில் உள்ளது\n\n✅ கடுமையான கல்வி அபாயங்கள் எதுவும் இல்லை. உங்கள் குழந்தை சரியான கல்வி பாதையில் முன்னேறி வருகிறார்.`,
+        type: "risk_analysis",
+        actions: [{ label: "வருகை விவரம் சரிபார்க்க", route: "/parent/attendance" }],
+        cards: [
+          {
+            title: "கல்வி அபாய நிலை",
+            badge: "Safe (பாதுகாப்பானது)",
+            description: "தீவிர அபாயங்கள் ஏதுமில்லை",
+            status: "safe",
+          },
+        ],
+        sourcesUsed: [...sources, "Early Warning Intervention Engine"],
+      };
+    }
+
+    return {
+      content: `### ⚠️ Academic Risk & Early Warning Assessment\n\n- **Student**: **${name}** (${context.rollNumber})\n- **Overall Standing**: **SAFE (Low Risk)**\n\n**Assessed Factors**:\n- **Arrears / Backlogs**: 0 (Clean Track Record)\n- **Attendance Margin**: 84% overall (+9% above 75% minimum)\n- **Pending Deliverables**: 1 project report\n\nNo critical intervention required at this moment.`,
+      type: "risk_analysis",
+      actions: [{ label: "Check Attendance Status", route: "/parent/attendance" }],
+      cards: [
+        {
+          title: "Risk Level",
+          badge: "Safe / Low",
+          description: "No academic probation flags",
+          status: "safe",
+        },
+      ],
+      sourcesUsed: [...sources, "Risk Analysis Module"],
+    };
+  }
+
+  // 4. MENTOR GUIDANCE
+  if (intent === "MENTOR_GUIDANCE") {
+    if (isTamil) {
+      return {
+        content: `### 👨‍🏫 வழிகாட்டி ஆசிரியர் விவரம் & கலந்தாய்வு (Mentor Guidance)\n\n- **வழிகாட்டி ஆசிரியர்**: **${context.mentorName}** (துணை பேராசிரியர் - AI துறை)\n- **தொடர்பு எண்**: **${context.mentorContact}**\n- **மின்னஞ்சல்**: suresh.r@aura.edu\n- **அடுத்த சந்திப்பு**: **வெள்ளிக்கிழமை மாலை 3:00 மணி** (1-க்கு-1 ஆன்லைன் கலந்தாய்வு)\n\n**ஆசிரியர் குறிப்பு (Teacher Note)**:\n"அலெக்ஸ் வகுப்பில் மிகவும் கூர்மையான மாணவர். ப்ராஜெக்ட் பணிகளை மிக நேர்த்தியாக செய்து வருகிறார். பெருந்தரவு வகுப்புகளுக்கு மட்டும் ஒழுங்காக வர அறிவுறுத்தவும்."`,
+        type: "mentor_guidance",
+        actions: [{ label: "அறிவிப்புகள் பக்கம்", route: "/parent/notifications" }],
+        cards: [
+          {
+            title: "வழிகாட்டி ஆசிரியர்",
+            badge: context.mentorName,
+            description: `சந்திப்பு: வெள்ளிக்கிழமை 3:00 PM • ${context.mentorContact}`,
+            status: "safe",
+          },
+        ],
+        sourcesUsed: [...sources, "Mentor System"],
+      };
+    }
+
+    return {
+      content: `### 👨‍🏫 Faculty Mentor Contact & Consultation\n\n- **Assigned Mentor**: **${context.mentorName}** (Associate Professor, Dept of AI)\n- **Contact Phone**: **${context.mentorContact}**\n- **Email**: suresh.r@aura.edu\n- **Next Scheduled Meeting**: **Friday at 3:00 PM** (1-on-1 Online Parent Review)\n\n**Mentor Remark**:\n"Alex is an exceptionally engaged student with high aptitude in NLP and computer vision. Ensuring punctual attendance in morning Big Data lectures is the only point to monitor."`,
+      type: "mentor_guidance",
+      actions: [{ label: "View Parent Alerts", route: "/parent/notifications" }],
+      cards: [
+        {
+          title: "Mentor Session",
+          badge: "Friday 3:00 PM",
+          description: `${context.mentorName} • Online Review`,
+          status: "safe",
+        },
+      ],
+      sourcesUsed: [...sources, "Faculty Mentor Records"],
+    };
+  }
+
+  // 5. ASSIGNMENTS HELP
+  if (intent === "ASSIGNMENT_HELP") {
+    if (isTamil) {
+      return {
+        content: `### 📝 சமர்ப்பிக்க வேண்டிய பணிகள் & வீட்டுப்பாடங்கள் (Pending Assignments)\n\n- **மாணவர்**: **${name}**\n- **நிலுவையில் உள்ள பணிகள்**: **1 பணி**\n- **முக்கிய பணி**: கணினி பார்வை ப்ராஜெக்ட் அறிக்கை (Computer Vision Phase 1 Project Report)\n- **கடைசி தேதி**: **திங்கட்கிழமை மாலை 5:00 மணி**\n\n✅ கடந்த வாரம் ஒப்படைக்கப்பட்ட தரவுத்தள பணிக்கு (DBMS) அலெக்ஸ் **92/100** மதிப்பெண் பெற்றுள்ளார்.`,
+        type: "assignment_help",
+        actions: [{ label: "கல்வி டாஷ்போர்டு", route: "/parent/dashboard" }],
+        cards: [
+          {
+            title: "Computer Vision Report",
+            badge: "திங்கட்கிழமை 5:00 PM",
+            description: "Phase 1 Submission Due",
+            status: "warning",
+          },
+        ],
+        sourcesUsed: [...sources, "LMS Assignment Module"],
+      };
+    }
+
+    return {
+      content: `### 📝 Pending Assignments & Deliverables\n\n- **Student**: **${name}**\n- **Active Pending Tasks**: **1 deliverable**\n- **Top Priority**: Computer Vision Phase 1 Report (Due Monday, 5:00 PM)\n\nPrevious submission (DBMS Project) scored **92/100** with commendation from course instructor.`,
+      type: "assignment_help",
+      actions: [{ label: "View Academic Dashboard", route: "/parent/dashboard" }],
+      cards: [
+        {
+          title: "Pending Deliverable",
+          badge: "Due Monday 5 PM",
+          description: "Computer Vision Phase 1 Report",
           status: "warning",
         },
       ],
-      sourcesUsed: [...sources, "Assignment Collection"],
+      sourcesUsed: [...sources, "Assignment Records"],
     };
   }
 
+  // 6. STUDY PLANNING
   if (intent === "STUDY_PLANNING") {
+    if (isTamil) {
+      return {
+        content: `### 🗓️ குழந்தையின் படிப்பு அட்டவணை பரிந்துரை (Study Schedule)\n\nபெற்றோராக நீங்கள் வீட்டில் பின்வரும் படிப்பு நேரத்தை அமைத்துக் கொடுக்கலாம்:\n\n1. **மாலை 06:00 – 07:15**: பெருந்தரவு பகுப்பாய்வு (Big Data) திருப்புதல் (*முக்கியமானது*)\n2. **மாலை 07:15 – 07:30**: சிறு தேநீர் இடைவேளை ☕\n3. **இரவு 07:30 – 08:30**: கணினி பார்வை ப்ராஜெக்ட் பணிகள் (Computer Vision Report)\n4. **இரவு 08:30 – 09:15**: இயந்திர கற்றல் பயிற்சி\n\n💡 **உதவிக்குறிப்பு**: தினசரி 2 மணிநேர சீரான மாலை படிப்பு அட்டவணை தேர்வு காலத்தில் மன அழுத்தத்தை குறைக்கும்.`,
+        type: "study_planning",
+        actions: [{ label: "டாஷ்போர்டு செல்ல", route: "/parent/dashboard" }],
+        cards: [
+          {
+            title: "தினசரி படிப்பு இலக்கு",
+            badge: "2 மணி 30 நிமிடம்",
+            description: "மாலை 6:00 PM முதல் 9:15 PM வரை",
+            status: "safe",
+          },
+        ],
+        sourcesUsed: [...sources, "AI Planner"],
+      };
+    }
+
     return {
-      content: `### 🗓️ Smart Study Plan Recommendation\n\nBased on your upcoming deadlines and study goals, here is your recommended schedule for today:\n\n1. **06:00 PM – 07:30 PM**: DBMS Assignment (*Urgent*) \n2. **07:30 PM – 07:45 PM**: Short Break ☕\n3. **07:45 PM – 08:45 PM**: Data Structures Revision\n4. **09:00 PM – 09:45 PM**: Machine Learning Practice\n\nClick below to save this plan to your Study Planner!`,
+      content: `### 🗓️ Recommended Study Schedule for ${name}\n\nHere is a structured daily home routine you can encourage:\n\n1. **06:00 PM – 07:15 PM**: Big Data Analytics concepts revision (*High Priority*)\n2. **07:15 PM – 07:30 PM**: Healthy snack break ☕\n3. **07:30 PM – 08:30 PM**: Computer Vision Lab report completion\n4. **08:30 PM – 09:15 PM**: Machine Learning coding drills\n\nA regular 2-hour daily evening routine ensures complete readiness for university semester exams.`,
       type: "study_planning",
-      actions: [
-        { label: "Open Study Planner", route: "/dashboard/study-planner" },
-        { label: "Add All to Planner", route: "/dashboard/study-planner", actionType: "ADD_PLANNER_TASK", payload: { title: "DBMS Revision", subject: "DBMS", estimatedMinutes: 90 } },
-      ],
+      actions: [{ label: "Academic Dashboard", route: "/parent/dashboard" }],
       cards: [
         {
-          title: "Today's Recommended Focus",
-          badge: "3 Sessions",
-          description: "Total: 3h 15m planned study time",
-          status: "good",
-        },
-      ],
-      sourcesUsed: [...sources, "StudyPlanner Collection"],
-    };
-  }
-
-  if (intent === "ACADEMIC_ANALYSIS") {
-    return {
-      content: `### 📊 Academic Performance Overview\n\n- **Current CGPA**: **${context.cgpa}** / 10.0\n- **Academic Score**: **82 / 100** (+4.2% from previous semester)\n\n**Strengths**:\n- High score in Data Structures (86%)\n- Strong assignment submission record (86%)\n\n**Needs Attention**:\n- Operating Systems Attendance (72%)\n- Machine Learning Internal Test Preparation\n\n**Recommended Next Step**: Schedule a 60-minute revision block for Operating Systems.`,
-      type: "academic_analysis",
-      actions: [
-        { label: "View Full Analytics", route: "/dashboard/analytics" },
-        { label: "View Profile", route: "/dashboard/profile" },
-      ],
-      cards: [
-        {
-          title: "Academic Health",
-          badge: "84 / 100",
-          description: "Overall Status: Good",
+          title: "Target Study Time",
+          badge: "2h 30m / day",
+          description: "Structured Evening Routine",
           status: "safe",
         },
       ],
-      sourcesUsed: [...sources, "Student Profile", "Analytics Engine"],
+      sourcesUsed: [...sources, "Study Engine"],
     };
   }
 
-  if (intent === "RISK_ANALYSIS") {
-    return {
-      content: `### ⚠️ Academic Risk Analysis\n\n- **Overall Risk Level**: **${context.risk.toUpperCase()} RISK**\n\n**Evaluated Risk Factors**:\n- **Attendance**: Operating Systems is at 72% (*Requires 4 classes*)\n- **Assignments**: ${context.pendingAssignments} pending assignments\n- **Study Consistency**: 84% (*Safe*)\n\n**Immediate Action Required**: Attend all upcoming Operating Systems classes and complete the pending DBMS assignment.`,
-      type: "risk_analysis",
-      actions: [
-        { label: "View Attendance", route: "/dashboard/attendance" },
-        { label: "View Analytics Risk", route: "/dashboard/analytics" },
-      ],
-      cards: [
-        {
-          title: "Risk Status",
-          badge: `${context.risk} Risk`,
-          description: "Attendance shortage in Operating Systems",
-          status: context.risk === "Low" ? "safe" : "warning",
-        },
-      ],
-      sourcesUsed: [...sources, "Risk Engine"],
-    };
-  }
+  // 7. TRANSLATION TOOL
+  if (intent === "TRANSLATION_TOOL") {
+    if (isTamil) {
+      return {
+        content: `### 🌐 AURA AI பெற்றோர் மொழிபெயர்ப்பாளர் (AI Academic Translator)\n\nகல்லூரியின் எந்தவொரு ஆங்கில சுற்றறிக்கை, தேர்வு முடிவுகள் அல்லது ஆசிரியர் குறிப்புகளையும் எளிமையான தமிழில் மொழிபெயர்க்கலாம்!\n\n**பயன்படுத்தும் முறை**:\n- மேலே உள்ள **"🌐 AI மொழிபெயர்ப்பாளர்"** டேப்பை கிளிக் செய்யவும்.\n- ஆங்கில சுற்றறிக்கையை பேஸ்ட் செய்தால் உடனுக்குடன் **தமிழ் மொழிபெயர்ப்பு, முக்கிய குறிப்புகள் மற்றும் ஆடியோ வாசிப்பு** கிடைக்கும்.\n- அல்லது இதே சாட்டில் ஆங்கில செய்தியை அனுப்பினால் உடனடியாக தமிழில் மொழிபெயர்த்து தருகிறேன்!`,
+        type: "translation_tool",
+        actions: [],
+        cards: [
+          {
+            title: "மொழிபெயர்ப்பு வசதி",
+            badge: "English ⇄ தமிழ்",
+            description: "உடனடி சுற்றறிக்கை மொழிபெயர்ப்பு மற்றும் ஆடியோ வாசிப்பு",
+            status: "safe",
+          },
+        ],
+        sourcesUsed: [...sources, "AURA Bilingual Translation Engine"],
+      };
+    }
 
-  if (intent === "SKILL_ANALYSIS") {
     return {
-      content: `### 🎯 Skill Gap Analysis & Recommendations\n\n- **Skills Proficiency**: **${context.skillProgress}%**\n- **Top Skill**: Programming & Problem Solving (85%)\n- **Skill Gap**: Node.js Backend Development (*Intermediate 68% -> Target Advanced 85%*)\n\n**Learning Pathway**:\n1. Master Async/Await & Event Loop concepts.\n2. Build a full-stack REST API with MongoDB & Mongoose.\n3. Implement JWT authentication & Middleware pattern.`,
-      type: "skill_analysis",
-      actions: [{ label: "Open Skills Module", route: "/dashboard/skills" }],
-      cards: [
-        {
-          title: "Top Recommended Skill",
-          badge: "Node.js",
-          description: "Skill Gap: 32% to Advanced",
-          status: "good",
-        },
-      ],
-      sourcesUsed: [...sources, "Skill Collection"],
-    };
-  }
-
-  if (intent === "PROJECT_GUIDANCE") {
-    return {
-      content: `### 💻 Project Mentor\n\n- **Active Projects**: **${context.activeProjects}**\n- **Primary Project**: Placement Portal (*Web Development*)\n- **Current Progress**: **78%**\n\n**Next Recommended Milestone**:\n- Integrate the Student Analytics dashboard endpoint with Mongoose aggregation pipelines.\n- Complete UI responsive testing on tablet/mobile screens.`,
-      type: "project_guidance",
-      actions: [{ label: "Open Projects", route: "/dashboard/projects" }],
-      cards: [
-        {
-          title: "Placement Portal",
-          badge: "78% Complete",
-          description: "Domain: Web Development",
-          status: "safe",
-        },
-      ],
-      sourcesUsed: [...sources, "Project Collection"],
-    };
-  }
-
-  if (intent === "CODING_HELP") {
-    return {
-      content: `### 💻 Coding Assistant\n\nHere is a quick reference for implementing async middleware error handling in Node.js/Express:\n\n\`\`\`javascript\nconst asyncHandler = (fn) => (req, res, next) => {\n  Promise.resolve(fn(req, res, next)).catch(next);\n};\n\nmodule.exports = asyncHandler;\n\`\`\`\n\nFeel free to paste any code snippet or error stack trace, and I will help you debug it step by step!`,
-      type: "coding_help",
+      content: `### 🌐 AURA AI Parent Academic Translator (English ⇄ Tamil)\n\nYou can easily translate any college circular, exam grade sheet, or teacher notification into fluent Tamil with key action points highlighted!\n\n- Switch to the **"🌐 AI Translator"** tab at any time.\n- Paste any English notice or remark to receive instant Tamil translation with parent action items and audio voice playback.\n- You can also paste text right here in chat for instant bilingual assistance.`,
+      type: "translation_tool",
       actions: [],
-      sourcesUsed: ["Coding Engine"],
-    };
-  }
-
-  if (intent === "CAREER_GUIDANCE") {
-    return {
-      content: `### 💼 Career Copilot\n\n- **Target Role**: Full Stack Software Engineer\n- **Career Match**: **84%**\n\n**Strengths**:\n- Data Structures & Algorithms\n- Web Development Fundamentals\n\n**Skill Gaps**:\n- Backend Microservices Architecture\n- Docker & Containerization\n\n**Recommended Next Step**: Complete the Placement Portal project and add 2 full-stack projects to your portfolio.`,
-      type: "career_guidance",
-      actions: [
-        { label: "View Skills", route: "/dashboard/skills" },
-        { label: "View Projects", route: "/dashboard/projects" },
+      cards: [
+        {
+          title: "Bilingual Translator",
+          badge: "EN ⇄ TA",
+          description: "Instant translation & voice speech synthesis",
+          status: "safe",
+        },
       ],
-      sourcesUsed: [...sources, "Career Engine"],
+      sourcesUsed: [...sources, "Translator Service"],
     };
   }
 
-  // Fallback General Chat
+  // 8. CAREER / PLACEMENT
+  if (intent === "CAREER_GUIDANCE") {
+    if (isTamil) {
+      return {
+        content: `### 💼 கேம்பஸ் வேலைவாய்ப்பு & திறன் தயாரிப்பு (Placement Readiness)\n\n- **மாணவர்**: **${name}**\n- **இலக்கு பதவி**: AI & Full Stack மென்பொருள் பொறியாளர்\n- **வேலைவாய்ப்பு பொருத்தம் (Placement Match)**: **88%**\n\n**சிறந்த திறன்கள்**:\n- மென்பொருள் நிரலாக்கம் & அல்காரிதம் (85%)\n- இயற்கை மொழி செயலாக்கம் & தரவு அறிவியல்\n\n💡 **பெற்றோருக்கு ஆலோசனை**: அலெக்ஸ் நல்ல தொழில்நுட்ப திறன்களை கொண்டுள்ளார். இறுதி ஆண்டு கேம்பஸ் நேர்முகத் தேர்வுகளுக்கு (Campus Placements) முழு தகுதியுடன் இருக்கிறார்.`,
+        type: "career_guidance",
+        actions: [{ label: "டாஷ்போர்டு", route: "/parent/dashboard" }],
+        cards: [
+          {
+            title: "கேம்பஸ் தகுதி",
+            badge: "88% Match",
+            description: "AI & Full Stack Engineer Track",
+            status: "safe",
+          },
+        ],
+        sourcesUsed: [...sources, "Career Engine"],
+      };
+    }
+
+    return {
+      content: `### 💼 Campus Placement & Career Readiness\n\n- **Student**: **${name}** (${context.rollNumber})\n- **Target Career**: AI & Software Engineer\n- **Placement Readiness Match**: **88%**\n\n**Strongest Areas**:\n- Problem Solving & Algorithms (85%)\n- NLP & Deep Learning frameworks\n\nAlex is well-positioned for top tier tech campus recruitment drives starting next semester.`,
+      type: "career_guidance",
+      actions: [{ label: "Academic Dashboard", route: "/parent/dashboard" }],
+      cards: [
+        {
+          title: "Placement Match",
+          badge: "88%",
+          description: "High Readiness Profile",
+          status: "safe",
+        },
+      ],
+      sourcesUsed: [...sources, "Placement System"],
+    };
+  }
+
+  // FALLBACK GENERAL CHAT
+  if (isTamil) {
+    return {
+      content: `வணக்கம் **${context.isParent ? context.parentName : context.studentName}** அவர்களே! 🙏 நான் உங்கள் **AURA பெற்றோர் கல்வி ஆலோசகர் (AURA AI Copilot)**.\n\nஉங்கள் குழந்தை **${name}** (${context.rollNumber})-ன்:\n- 📅 வருகைப் பதிவு (84%)\n- 📊 கல்வி மதிப்பெண்கள் & CGPA (8.80)\n- 👨‍🏫 வழிகாட்டி ஆசிரியர் Dr. சுரேஷ் சந்திப்பு விவரங்கள்\n- 📝 நிலுவை வீட்டுப்பாடங்கள் மற்றும் தேர்வுகள்\n\nகுறித்து தமிழில் எந்த கேள்வியையும் நீங்கள் கேட்கலாம். கல்லூரியின் ஆங்கில சுற்றறிக்கைகளையும் உடனுக்குடன் தமிழில் மொழிபெயர்த்து தருகிறேன். நான் உங்களுக்கு எவ்வாறு உதவட்டும்?`,
+      type: "general_chat",
+      actions: [
+        { label: "வருகை விவரம்", route: "/parent/attendance" },
+        { label: "கல்வி டாஷ்போர்டு", route: "/parent/dashboard" },
+        { label: "அறிவிப்புகள்", route: "/parent/notifications" },
+      ],
+      cards: [
+        {
+          title: "குழந்தை விவரம்",
+          badge: name,
+          description: `Roll: ${context.rollNumber} • CGPA: ${context.cgpa} • Attendance: ${context.attendance}%`,
+          status: "safe",
+        },
+      ],
+      sourcesUsed: [...sources],
+    };
+  }
+
   return {
-    content: `Hi **${context.studentName}**! I'm **AURA**, your academic copilot. I can help you analyze your academic performance, track attendance, plan your daily study schedule, manage pending assignments, and guide your career skills.\n\nWhat would you like to focus on today?`,
+    content: `Hello **${context.isParent ? context.parentName : context.studentName}**! 👋 I am **AURA**, your intelligent academic advisory copilot.\n\nI can assist you with comprehensive updates regarding **${name}** (${context.rollNumber}):\n- 📅 Attendance monitoring (Current: ${context.attendance}%)\n- 📊 Exam marks, grades & CGPA (${context.cgpa})\n- 👨‍🏫 Mentor consultation details with Dr. Suresh R\n- 🌐 Instant English ⇄ Tamil translation for college circulars\n\nFeel free to ask in English or தமிழ்! What would you like to review today?`,
     type: "general_chat",
     actions: [
-      { label: "Check Attendance", route: "/dashboard/attendance" },
-      { label: "View Study Planner", route: "/dashboard/study-planner" },
-      { label: "Check Analytics", route: "/dashboard/analytics" },
+      { label: "Check Attendance", route: "/parent/attendance" },
+      { label: "View Academic Dashboard", route: "/parent/dashboard" },
+      { label: "Check Notifications", route: "/parent/notifications" },
+    ],
+    cards: [
+      {
+        title: "Student Overview",
+        badge: name,
+        description: `Roll: ${context.rollNumber} • CGPA: ${context.cgpa} • Attendance: ${context.attendance}%`,
+        status: "safe",
+      },
     ],
     sourcesUsed: [...sources],
   };
 }
 
 // ─── Process Chat Message ────────────────────────────────────
-exports.processChat = async (userId, conversationId, messageText, mode = "auto") => {
+exports.processChat = async (userId, conversationId, messageText, mode = "auto", language = "en") => {
   const context = await exports.getStudentContext(userId);
   const intent = detectIntent(messageText, mode);
+
+  // Check if Tamil language requested or Tamil characters present
+  const isTamil = language === "ta" || language === "tamil" || /[\u0B80-\u0BFF]/.test(messageText);
 
   // Retrieve or Create Conversation
   let conversation;
@@ -252,7 +443,7 @@ exports.processChat = async (userId, conversationId, messageText, mode = "auto")
     const title = messageText.length > 30 ? messageText.substring(0, 30) + "..." : messageText;
     conversation = await AIConversation.create({
       user: userId,
-      title: title || "New Academic Chat",
+      title: title || (isTamil ? "புதிய கல்வி ஆலோசனை" : "New Academic Chat"),
       mode,
     });
   }
@@ -268,8 +459,12 @@ exports.processChat = async (userId, conversationId, messageText, mode = "auto")
 
   // Try LLM Engine or fallback to Deterministic Engine
   let responseData;
+  const llmPrompt = isTamil
+    ? `${messageText}\n\n(Note: Reply in courteous, clear, natural academic Tamil suitable for an Indian college parent.)`
+    : messageText;
+
   const llmText = await llmEngine.generateResponse({
-    messages: [{ role: "user", content: messageText }],
+    messages: [{ role: "user", content: llmPrompt }],
     context,
     intent,
     mode,
@@ -280,13 +475,13 @@ exports.processChat = async (userId, conversationId, messageText, mode = "auto")
       content: llmText,
       type: "llm_generated",
       actions: [
-        { label: "View Study Planner", route: "/dashboard/study-planner" },
-        { label: "View Analytics", route: "/dashboard/analytics" },
+        { label: isTamil ? "வருகைப் பதிவு" : "Check Attendance", route: "/parent/attendance" },
+        { label: isTamil ? "டாஷ்போர்டு" : "Parent Dashboard", route: "/parent/dashboard" },
       ],
-      sourcesUsed: ["LLM Provider", "Student Academic Context"],
+      sourcesUsed: ["Gemini AI", "Student Academic Context"],
     };
   } else {
-    responseData = await buildDeterministicResponse(userId, intent, messageText, context);
+    responseData = await buildDeterministicResponse(userId, intent, messageText, context, isTamil);
   }
 
   // Save Assistant Message
@@ -312,6 +507,11 @@ exports.processChat = async (userId, conversationId, messageText, mode = "auto")
     userMessage: userMsg,
     assistantMessage: assistantMsg,
   };
+};
+
+// ─── Direct Academic Translator ─────────────────────────────
+exports.translateText = async (text, sourceLang = "en", targetLang = "ta") => {
+  return translatorService.translateAcademicText({ text, sourceLang, targetLang });
 };
 
 // ─── Conversations & History ────────────────────────────────

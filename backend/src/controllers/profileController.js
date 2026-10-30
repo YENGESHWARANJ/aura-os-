@@ -29,7 +29,7 @@ exports.uploadAvatar = async (req, res) => {
       return res.status(400).json({ success: false, message: "No image file provided" });
     }
     const avatarUrl = `/uploads/submissions/${req.file.filename}`;
-    const user = await profileService.updateAvatar(req.user.id, avatarUrl);
+    const user = await profileService.updateAvatar(req.user.id, avatarUrl, req.body?._id);
     res.json({ success: true, avatarUrl, user });
   } catch (err) {
     console.error("Upload avatar error:", err);
@@ -39,7 +39,7 @@ exports.uploadAvatar = async (req, res) => {
 
 exports.deleteAvatar = async (req, res) => {
   try {
-    const user = await profileService.deleteAvatar(req.user.id);
+    const user = await profileService.deleteAvatar(req.user.id, req.body?._id || req.query?._id);
     res.json({ success: true, message: "Avatar removed", user });
   } catch (err) {
     console.error("Delete avatar error:", err);
@@ -57,7 +57,7 @@ exports.uploadResume = async (req, res) => {
       fileName: req.file.originalname,
       updatedAt: new Date(),
     };
-    const user = await profileService.updateResume(req.user.id, resumeData);
+    const user = await profileService.updateResume(req.user.id, resumeData, req.body?._id);
     res.json({ success: true, resume: resumeData, user });
   } catch (err) {
     console.error("Upload resume error:", err);
@@ -67,7 +67,7 @@ exports.uploadResume = async (req, res) => {
 
 exports.deleteResume = async (req, res) => {
   try {
-    const user = await profileService.deleteResume(req.user.id);
+    const user = await profileService.deleteResume(req.user.id, req.body?._id || req.query?._id);
     res.json({ success: true, message: "Resume deleted", user });
   } catch (err) {
     console.error("Delete resume error:", err);

@@ -56,6 +56,13 @@ import ParentDashboard from "../pages/parent/ParentDashboard";
 import ParentAttendance from "../pages/parent/ParentAttendance";
 import ParentNotifications from "../pages/parent/ParentNotifications";
 
+// Novelty Advanced Modules
+import InterventionSimulator from "../pages/interventions/InterventionSimulator";
+import CurriculumIntelligence from "../pages/curriculum/CurriculumIntelligence";
+import EvidenceWallet from "../pages/evidence/EvidenceWallet";
+import EvidenceVerification from "../pages/evidence/EvidenceVerification";
+import PublicEvidenceVerification from "../pages/evidence/PublicEvidenceVerification";
+
 // Layout / Protection
 import ProtectedRoute from "./ProtectedRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -97,6 +104,12 @@ export default function AppRouter() {
             <Register />
           )
         }
+      />
+
+      {/* Public Cryptographic Evidence Verification (No Login Required) */}
+      <Route
+        path="/verify/evidence/:verificationId"
+        element={<PublicEvidenceVerification />}
       />
 
       <Route
@@ -239,6 +252,54 @@ export default function AppRouter() {
           <ProtectedRoute>
             <DashboardLayout>
               <AIAssistant />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Counterfactual Academic Intervention Simulator */}
+      <Route
+        path="/dashboard/intervention-simulator"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <InterventionSimulator />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Curriculum & Skill Gap Intelligence */}
+      <Route
+        path="/dashboard/curriculum-intelligence"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <CurriculumIntelligence />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Verifiable Academic Evidence Wallet */}
+      <Route
+        path="/dashboard/evidence-wallet"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <EvidenceWallet />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Evidence Verification Queue */}
+      <Route
+        path="/dashboard/evidence-verification"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <EvidenceVerification />
             </DashboardLayout>
           </ProtectedRoute>
         }
@@ -484,6 +545,38 @@ export default function AppRouter() {
         }
       />
 
+      {/* Faculty - Curriculum Intelligence */}
+      <Route
+        path="/faculty/curriculum-intelligence"
+        element={
+          <ProtectedRoute>
+            {isFacultyOrAdmin ? (
+              <DashboardLayout>
+                <CurriculumIntelligence />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )}
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Faculty - Evidence Verification */}
+      <Route
+        path="/faculty/evidence-verification"
+        element={
+          <ProtectedRoute>
+            {isFacultyOrAdmin ? (
+              <DashboardLayout>
+                <EvidenceVerification />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )}
+          </ProtectedRoute>
+        }
+      />
+
       {/* =========================================================
           MENTOR DASHBOARD
       ========================================================= */}
@@ -646,6 +739,38 @@ export default function AppRouter() {
         }
       />
 
+      {/* Mentor - Intervention Simulator */}
+      <Route
+        path="/mentor/interventions"
+        element={
+          <ProtectedRoute>
+            {isMentorOrAdmin ? (
+              <DashboardLayout>
+                <InterventionSimulator />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )}
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Mentor - Evidence Verification */}
+      <Route
+        path="/mentor/evidence-verification"
+        element={
+          <ProtectedRoute>
+            {isMentorOrAdmin ? (
+              <DashboardLayout>
+                <EvidenceVerification />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )}
+          </ProtectedRoute>
+        }
+      />
+
       {/* =========================================================
           PARENT PORTAL
       ========================================================= */}
@@ -689,6 +814,21 @@ export default function AppRouter() {
               </DashboardLayout>
             ) : (
               <Navigate to="/dashboard" replace />
+            )}
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/parent/ai"
+        element={
+          <ProtectedRoute>
+            {isParentOrAdmin ? (
+              <DashboardLayout>
+                <AIAssistant />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/dashboard/ai" replace />
             )}
           </ProtectedRoute>
         }

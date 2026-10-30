@@ -225,3 +225,61 @@ exports.getAnalyticsOverview = async (userId, semesterFilter) => {
     }
   };
 };
+
+exports.getCohortOverview = async () => {
+  const students = await User.find({ role: "student" }).lean();
+  const totalStudents = students.length;
+
+  if (totalStudents === 0) {
+    return {
+      totalStudents: 0,
+      averageAttendance: 0,
+      averageCGPA: 0,
+      highRiskStudents: 0,
+      criticalRiskStudents: 0,
+      pendingAssignments: 0,
+      totalSkills: 0,
+      activeStudents: 0,
+    };
+  }
+
+  let totalAtt = 0;
+  let totalCGPA = 0;
+  let highRisk = 0;
+  let criticalRisk = 0;
+  let pendingAsg = 0;
+  let allSkillsCount = 0;
+  let active = 0;
+
+  students.forEach((s) => {
+    totalAtt += Number(s.attendance || 0);
+    totalCGPA += Number(s.cgpa || 0);
+    if (s.status === "active") active++;
+
+    const riskLevel =
+      s.aiRisk?.level ||
+      (s.attendance < 65 ? "CRITICAL" : s.attendance < 75 ? "HIGH" : "LOW");
+    if (riskLevel === "HIGH") highRisk++;
+    if (riskLevel === "CRITICAL") criticalRisk++;
+
+    const pending = s.assignments?.pending ?? (s.assignmentsPending || 0);
+    const overdue = s.assignments?.overdue ?? 0;
+    pendingAsg += pending + overdue;
+
+    const skillsCount =
+      s.skillsList?.length ||
+      (Array.isArray(s.skills) ? s.skills.length : 0);
+    allSkillsCount += skillsCount;
+  });
+
+  return {
+    totalStudents,
+    averageAttendance: Number((totalAtt / totalStudents).toFixed(1)),
+    averageCGPA: Number((totalCGPA / totalStudents).toFixed(2)),
+    highRiskStudents: highRisk,
+    criticalRiskStudents: criticalRisk,
+    pendingAssignments: pendingAsg,
+    totalSkills: allSkillsCount,
+    activeStudents: active,
+  };
+};

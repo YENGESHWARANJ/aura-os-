@@ -224,18 +224,18 @@ export default function Skills() {
   };
 
   return (
-    <div className="min-h-screen pb-12 text-slate-100">
+    <div className="min-h-screen pb-12 text-[var(--aura-text)]">
       {/* 1. PAGE HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-1.5">
+          <nav className="flex items-center gap-1.5 text-xs text-[var(--aura-text-muted)] mb-1.5 font-medium">
             <span>Dashboard</span>
-            <ChevronRight className="h-3 w-3 text-slate-600" />
-            <span className="text-sky-400 font-medium">Skills & Competency</span>
+            <ChevronRight className="h-3 w-3 opacity-50" />
+            <span className="text-indigo-600 dark:text-indigo-400 font-bold">Skills & Competency</span>
           </nav>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Skills & Competency</h1>
-          <p className="text-sm text-slate-400 mt-1 max-w-xl">
+          <h1 className="text-3xl font-black text-[var(--aura-text)] tracking-tight">Skills & Competency</h1>
+          <p className="text-sm text-[var(--aura-text-secondary)] mt-1 max-w-xl">
             Build, track and strengthen the skills that shape your academic and career readiness.
           </p>
         </div>
@@ -247,15 +247,15 @@ export default function Skills() {
               setSkillToEdit(null);
               setIsAddModalOpen(true);
             }}
-            className="inline-flex items-center gap-2 rounded-xl bg-sky-500 hover:bg-sky-400 px-4 py-2.5 text-xs font-semibold text-white transition shadow-lg shadow-sky-500/25"
+            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-bold text-white transition shadow-md shadow-indigo-500/25 cursor-pointer text-white-force"
           >
             <Plus className="h-4 w-4" /> Add Skill
           </button>
           <button
             onClick={() => alert("Skill Assessment module initialized. Complete test to earn verified badges.")}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 px-4 py-2.5 text-xs font-semibold text-slate-200 transition"
+            className="inline-flex items-center gap-2 rounded-xl bg-[var(--aura-surface)] hover:bg-[var(--aura-surface-2)] border border-[var(--aura-border)] px-4 py-2.5 text-xs font-bold text-[var(--aura-text)] transition cursor-pointer shadow-xs"
           >
-            <Award className="h-4 w-4 text-indigo-400" /> Skill Assessment
+            <Award className="h-4 w-4 text-indigo-500" /> Skill Assessment
           </button>
         </div>
       </div>

@@ -60,3 +60,9 @@ scratch/
 *.key
 *.cert
 *.crt
+
+# Uploads & Media
+backend/uploads/*
+!backend/uploads/**/.gitkeep
+!backend/uploads/.gitkeep
+uploads/

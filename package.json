@@ -1,4 +1,15 @@
 {
+  "name": "aura-os",
+  "version": "1.0.0",
+  "scripts": {
+    "mobile": "npm --prefix mobile start",
+    "mobile:android": "npm --prefix mobile run android",
+    "mobile:ios": "npm --prefix mobile run ios",
+    "mobile:web": "npm --prefix mobile run web",
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend run dev",
+    "seed:students": "npm --prefix backend run seed:students"
+  },
   "dependencies": {
     "mongodb": "^7.5.0"
   }

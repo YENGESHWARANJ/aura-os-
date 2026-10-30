@@ -2,52 +2,24 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getMentorRiskStudents } from "../../services/mentor/mentorApi";
 import PageHeader from "../../components/ui/PageHeader";
-import { AlertTriangle, ShieldAlert, Phone, Video, Eye, Calendar, Sparkles } from "lucide-react";
+import { AlertTriangle, ShieldAlert, Eye, Video } from "lucide-react";
+import { SAMPLE_STUDENTS } from "../../data/mockStudents";
 
-const DEMO_RISK_STUDENTS = [
-  {
-    _id: "s1",
-    name: "Alex Johnson",
-    rollNo: "22AI701",
-    email: "alex@aura.edu",
-    semester: "Semester 7",
-    cgpa: 6.9,
-    attendance: 68,
-    riskLevel: "Critical",
-    reason: "Attendance below 70% & Mid-term mark drop in Data Viz.",
-    lastContact: "2 days ago",
-    recommendedAction: "Schedule urgent 1-on-1 counseling session.",
-  },
-  {
-    _id: "s2",
-    name: "Rahul Kumar",
-    rollNo: "22AI704",
-    email: "rahul@aura.edu",
-    semester: "Semester 7",
-    cgpa: 7.1,
-    attendance: 72,
-    riskLevel: "High",
-    reason: "Low internal marks in NLP & 3 pending assignments.",
-    lastContact: "4 days ago",
-    recommendedAction: "Issue assignment extension & academic tutoring.",
-  },
-  {
-    _id: "s3",
-    name: "Priya S",
-    rollNo: "22AI706",
-    email: "priya@aura.edu",
-    semester: "Semester 7",
-    cgpa: 7.8,
-    attendance: 76,
-    riskLevel: "Medium",
-    reason: "Attendance approaching mandatory 75% threshold in BDA.",
-    lastContact: "1 day ago",
-    recommendedAction: "Notify student to attend upcoming 3 consecutive sessions.",
-  },
-];
+const MAPPED_RISK_STUDENTS = SAMPLE_STUDENTS.filter((s) => s.risk !== "Low").map((s) => ({
+  _id: s._id,
+  name: s.name,
+  rollNo: s.rollNo,
+  email: s.email,
+  semester: s.semester || "Semester 7",
+  cgpa: s.cgpa,
+  attendance: s.attendance,
+  riskLevel: s.risk,
+  reason: s.riskReason,
+  recommendedAction: s.recommendedAction,
+}));
 
 export default function RiskStudents() {
-  const [students, setStudents] = useState(DEMO_RISK_STUDENTS);
+  const [students, setStudents] = useState(MAPPED_RISK_STUDENTS);
 
   useEffect(() => {
     const fetchRisk = async () => {
@@ -57,7 +29,8 @@ export default function RiskStudents() {
           setStudents(response.data.data);
         }
       } catch {
-        // Fallback demo risk students loaded
+        // Fallback to MAPPED_RISK_STUDENTS from 50 students dataset
+        setStudents(MAPPED_RISK_STUDENTS);
       }
     };
     fetchRisk();
@@ -66,13 +39,14 @@ export default function RiskStudents() {
   const criticalCount = students.filter((s) => s.riskLevel === "Critical").length;
   const highCount = students.filter((s) => s.riskLevel === "High").length;
   const mediumCount = students.filter((s) => s.riskLevel === "Medium").length;
+  const safeCount = SAMPLE_STUDENTS.filter((s) => s.risk === "Low").length;
 
   return (
     <div className="w-full space-y-6">
       <PageHeader
         eyebrow="Mentor Portal"
         title="At-Risk Students Management"
-        description="Identify students requiring academic intervention, attendance recovery, or specialized counseling."
+        description="Identify and support cohort students requiring academic intervention, attendance recovery, or specialized counseling."
         actions={
           <span className="aura-badge aura-badge-danger py-1.5 px-3">
             <ShieldAlert className="h-3.5 w-3.5 mr-1 inline" />
@@ -82,28 +56,28 @@ export default function RiskStudents() {
       />
 
       {/* KPI Risk Tier Cards */}
-      <div className="attendance-stats">
-        <div className="attendance-stat-card border-rose-500/30 bg-rose-950/10">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="aura-card border-rose-500/30 bg-rose-950/10 p-4 text-center">
           <span className="text-xs font-bold uppercase text-rose-400">Critical Risk</span>
           <p className="text-3xl font-extrabold text-rose-400 mt-2">{criticalCount}</p>
-          <p className="text-xs text-slate-400 mt-1">Requires Immediate Action</p>
+          <p className="text-xs text-slate-400 mt-1">Attendance &lt; 70% / Urgent Action</p>
         </div>
 
-        <div className="attendance-stat-card border-amber-500/30 bg-amber-950/10">
+        <div className="aura-card border-amber-500/30 bg-amber-950/10 p-4 text-center">
           <span className="text-xs font-bold uppercase text-amber-400">High Risk</span>
           <p className="text-3xl font-extrabold text-amber-400 mt-2">{highCount}</p>
-          <p className="text-xs text-slate-400 mt-1">Attendance & Score Drops</p>
+          <p className="text-xs text-slate-400 mt-1">Attendance 70-74% / Score Drops</p>
         </div>
 
-        <div className="attendance-stat-card border-yellow-500/30 bg-yellow-950/10">
+        <div className="aura-card border-yellow-500/30 bg-yellow-950/10 p-4 text-center">
           <span className="text-xs font-bold uppercase text-yellow-400">Medium Risk</span>
           <p className="text-3xl font-extrabold text-yellow-400 mt-2">{mediumCount}</p>
-          <p className="text-xs text-slate-400 mt-1">Approaching Threshold</p>
+          <p className="text-xs text-slate-400 mt-1">Approaching 75% Threshold</p>
         </div>
 
-        <div className="attendance-stat-card border-emerald-500/30 bg-emerald-950/10">
+        <div className="aura-card border-emerald-500/30 bg-emerald-950/10 p-4 text-center">
           <span className="text-xs font-bold uppercase text-emerald-400">Safe / On Track</span>
-          <p className="text-3xl font-extrabold text-emerald-400 mt-2">41</p>
+          <p className="text-3xl font-extrabold text-emerald-400 mt-2">{safeCount}</p>
           <p className="text-xs text-slate-400 mt-1">Normal Trajectory</p>
         </div>
       </div>

@@ -1,6 +1,11 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import authApi from "../api/services/authApi";
+import {
+  registerForPushNotificationsAsync,
+  unregisterPushTokenAsync,
+} from "../services/pushNotificationService";
+import { disconnectMobileSocket } from "../services/mobileSocketService";
 
 export const AuthContext = createContext({
   user: null,
@@ -31,6 +36,9 @@ export const AuthProvider = ({ children }) => {
           const parsedUser = JSON.parse(storedUserJson);
           setToken(storedToken);
           setUser(parsedUser);
+
+          // Register push notification token upon restoring active session
+          registerForPushNotificationsAsync().catch(() => {});
         }
       } catch (err) {
         console.warn("Error restoring auth from storage", err);
@@ -55,6 +63,10 @@ export const AuthProvider = ({ children }) => {
 
         setToken(accessToken);
         setUser(loggedUser);
+
+        // Register push notification token on login
+        registerForPushNotificationsAsync().catch(() => {});
+
         return { success: true, user: loggedUser };
       } else {
         throw new Error(data?.message || "Login failed");
@@ -79,14 +91,22 @@ export const AuthProvider = ({ children }) => {
 
     setToken(demoToken);
     setUser(demoUser);
+
+    // Register push notification token on demo login
+    registerForPushNotificationsAsync().catch(() => {});
   };
 
   const logout = async () => {
     try {
-      await authApi.logout();
+      // 1. Unregister push notification token from backend
+      await unregisterPushTokenAsync().catch(() => {});
+      disconnectMobileSocket();
+      // 2. Call backend auth logout
+      await authApi.logout().catch(() => {});
     } catch (e) {
       // Ignore backend logout error
     } finally {
+      await AsyncStorage.removeItem("aura_push_token");
       await AsyncStorage.removeItem("aura_token");
       await AsyncStorage.removeItem("accessToken");
       await AsyncStorage.removeItem("user");

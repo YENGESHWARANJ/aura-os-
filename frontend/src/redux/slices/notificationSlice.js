@@ -18,6 +18,10 @@ const notificationSlice = createSlice({
       state.unreadCount = action.payload;
     },
     addNotification: (state, action) => {
+      const notificationId = action.payload?._id || action.payload?.id;
+      if (notificationId && state.notifications.some((item) => (item._id || item.id) === notificationId)) {
+        return;
+      }
       state.notifications.unshift(action.payload);
       state.unreadCount += 1;
     },

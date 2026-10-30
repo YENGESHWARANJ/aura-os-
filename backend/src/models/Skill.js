@@ -18,12 +18,17 @@ const SkillSchema = new mongoose.Schema(
       enum: [
         "Technical",
         "Programming",
+        "Frontend",
+        "Backend",
         "Frameworks",
         "Database",
         "Tools",
+        "Cloud",
+        "DevOps",
         "Soft Skills",
         "Domain Skills",
-        "AI / ML"
+        "Design",
+        "AI / ML",
       ],
       default: "Programming"
     },

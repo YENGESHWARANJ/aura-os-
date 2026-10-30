@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,9 +13,23 @@ import FacultyNavigator from "./FacultyNavigator";
 import MentorNavigator from "./MentorNavigator";
 import ParentNavigator from "./ParentNavigator";
 import AdminNavigator from "./AdminNavigator";
+import { setupNotificationListeners } from "../services/pushNotificationService";
 
 export default function RootNavigator() {
   const { isAuthenticated, isLoading, user } = useAuth();
+  const navigationRef = useRef(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || !navigationRef.current) return;
+
+    const unsubscribe = setupNotificationListeners({
+      navigate: (screenName, params) => {
+        navigationRef.current?.navigate(screenName, params);
+      },
+    }, user?.role);
+
+    return unsubscribe;
+  }, [isAuthenticated, user?.role]);
 
   if (isLoading) {
     return (
@@ -48,7 +62,7 @@ export default function RootNavigator() {
   };
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       {isAuthenticated ? renderRoleNavigator() : <AuthNavigator />}
     </NavigationContainer>
   );

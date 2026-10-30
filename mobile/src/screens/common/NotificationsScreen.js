@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import colors from "../../theme/colors";
@@ -13,57 +14,134 @@ import typography from "../../theme/typography";
 import Header from "../../components/common/Header";
 import Card from "../../components/common/Card";
 import Badge from "../../components/common/Badge";
+import notificationApi from "../../api/services/notificationApi";
+import { subscribeToMobileNotifications } from "../../services/mobileSocketService";
 
-const INITIAL_NOTIFICATIONS = [
-  {
-    id: "notif-1",
-    title: "Capstone Phase 2 Submission Window Open",
-    message: "Batch 2026 submission window is open. Final deliverables due by Aug 31, 2026.",
-    time: "10 min ago",
-    category: "Academic",
-    read: false,
-    urgent: true,
-  },
-  {
-    id: "notif-2",
-    title: "1-on-1 Mentoring Meeting Scheduled",
-    message: "Dr. Suresh R scheduled a counseling session for Aug 30 at 03:30 PM in Cabin 204.",
-    time: "2 hours ago",
-    category: "Mentorship",
-    read: false,
-    urgent: false,
-  },
-  {
-    id: "notif-3",
-    title: "Internal 1 Examination Marks Published",
-    message: "Distributed Systems (CS601) Internal 1 evaluation has been posted. Score: 24/25.",
-    time: "1 day ago",
-    category: "Exam",
-    read: true,
-    urgent: false,
-  },
-  {
-    id: "notif-4",
-    title: "Statutory Attendance Safe Standing",
-    message: "Your monthly attendance stands at 88.0%, comfortably above the 75% institutional threshold.",
-    time: "2 days ago",
-    category: "Attendance",
-    read: true,
-    urgent: false,
-  },
-];
+const formatTime = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 1440) return `${Math.floor(minutes / 60)}h ago`;
+  return `${Math.floor(minutes / 1440)}d ago`;
+};
+
+const normalizeNotification = (notification) => ({
+  id: notification._id,
+  title: notification.title || "AURA OS Notification",
+  message: notification.message || "You have a new academic update.",
+  time: formatTime(notification.createdAt),
+  category: (notification.type || "System").replace(/_/g, " "),
+  read: Boolean(notification.isRead),
+  urgent: ["high", "critical"].includes(notification.priority),
+  targetRoute: notification.targetRoute,
+});
 
 export default function NotificationsScreen({ navigation }) {
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  const loadNotifications = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+
+    try {
+      const response = await notificationApi.getNotifications({ page: 1, limit: 50 });
+      const records = response?.data?.notifications || [];
+      setNotifications(records.map(normalizeNotification));
+    } catch (error) {
+      console.warn("[NotificationsScreen] Unable to load notifications:", error.message || error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    let active = true;
+    let unsubscribe = () => {};
+
+    subscribeToMobileNotifications((notification) => {
+      if (!active || !notification?._id) return;
+
+      setNotifications((current) => {
+        if (current.some((item) => item.id === notification._id)) return current;
+        return [normalizeNotification(notification), ...current];
+      });
+    }).then((cleanup) => {
+      if (!active) cleanup?.();
+      else unsubscribe = cleanup || unsubscribe;
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
+
+  const markAllRead = async () => {
+    try {
+      await notificationApi.markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (error) {
+      console.warn("[NotificationsScreen] Unable to mark all read:", error.message || error);
+    }
   };
 
-  const toggleRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: !n.read } : n))
-    );
+  const markRead = async (id) => {
+    const selected = notifications.find((notification) => notification.id === id);
+    if (!selected || selected.read) return;
+
+    try {
+      await notificationApi.markAsRead(id);
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.id === id ? { ...notification, read: true } : notification
+        )
+      );
+    } catch (error) {
+      console.warn("[NotificationsScreen] Unable to mark notification read:", error.message || error);
+    }
+  };
+
+  const openNotification = async (notification) => {
+    await markRead(notification.id);
+
+    const route = String(notification.targetRoute || "").toLowerCase();
+    const stackRoutes = navigation.getState?.()?.routeNames || [];
+    const parentNavigation = navigation.getParent?.();
+    const parentRoutes = parentNavigation?.getState?.()?.routeNames || [];
+
+    const stackTarget = route.includes("attendance")
+      ? "Attendance"
+      : route.includes("project")
+        ? "Projects"
+        : route.includes("settings")
+          ? "Settings"
+          : null;
+
+    if (stackTarget && stackRoutes.includes(stackTarget)) {
+      navigation.navigate(stackTarget);
+      return;
+    }
+
+    const tabTarget = route.includes("assignment")
+      ? "AssignmentsTab"
+      : route.includes("attendance")
+        ? "AttendanceTab"
+        : route.includes("profile") || route.includes("evidence") || route.includes("intervention")
+          ? "ProfileTab"
+          : null;
+
+    if (tabTarget && parentRoutes.includes(tabTarget)) {
+      parentNavigation.navigate(tabTarget);
+    }
   };
 
   return (
@@ -76,7 +154,11 @@ export default function NotificationsScreen({ navigation }) {
         onRightPress={markAllRead}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadNotifications(true)} />}
+      >
         <View style={styles.topActionRow}>
           <Text style={styles.unreadCount}>
             {notifications.filter((n) => !n.read).length} Unread Alerts
@@ -86,11 +168,15 @@ export default function NotificationsScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {notifications.map((notif) => (
+        {loading ? (
+          <ActivityIndicator color={colors.primaryLight} size="large" style={styles.loader} />
+        ) : notifications.length === 0 ? (
+          <Text style={styles.emptyText}>You are all caught up.</Text>
+        ) : notifications.map((notif) => (
           <TouchableOpacity
             key={notif.id}
             activeOpacity={0.8}
-            onPress={() => toggleRead(notif.id)}
+            onPress={() => openNotification(notif)}
           >
             <Card
               style={[
@@ -132,6 +218,15 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 32,
+  },
+  loader: {
+    marginTop: 48,
+  },
+  emptyText: {
+    color: colors.textMuted,
+    fontSize: typography.sizes.sm,
+    textAlign: "center",
+    marginTop: 48,
   },
   topActionRow: {
     flexDirection: "row",

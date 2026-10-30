@@ -18,8 +18,12 @@ const skillRoutes = require("./routes/v1/skill.routes");
 const studyPlannerRoutes = require("./routes/v1/studyPlanner.routes");
 const analyticsRoutes = require("./routes/v1/analytics.routes");
 const aiRoutes = require("./routes/v1/ai.routes");
+const dashboardRoutes = require("./routes/v1/dashboard.routes");
 const profileRoutes = require("./routes/v1/profile.routes");
 const settingsRoutes = require("./routes/v1/settings.routes");
+const interventionRoutes = require("./routes/v1/intervention.routes");
+const curriculumRoutes = require("./routes/v1/curriculum.routes");
+const evidenceRoutes = require("./routes/v1/evidence.routes");
 
 const app = express();
 
@@ -30,9 +34,11 @@ app.use(express.json());
 
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-// Mount v1 Routes
+// Mount v1 & Universal API Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/student", studentRoutes);
+app.use("/api/v1/students", studentRoutes);
+app.use("/api/students", studentRoutes);
 app.use("/api/v1/faculty", facultyRoutes);
 app.use("/api/v1/mentor", mentorRoutes);
 app.use("/api/v1/parent", parentRoutes);
@@ -43,9 +49,15 @@ app.use("/api/v1/projects", projectRoutes);
 app.use("/api/v1/skills", skillRoutes);
 app.use("/api/v1/study-planner", studyPlannerRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);
+app.use("/api/analytics", analyticsRoutes);
 app.use("/api/v1/ai", aiRoutes);
+app.use("/api/v1/dashboard", dashboardRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/settings", settingsRoutes);
+app.use("/api/v1/interventions", interventionRoutes);
+app.use("/api/v1/curriculum", curriculumRoutes);
+app.use("/api/v1/evidence", evidenceRoutes);
 
 app.get("/", (req, res) => {
   res.json({

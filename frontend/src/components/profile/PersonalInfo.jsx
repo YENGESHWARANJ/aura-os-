@@ -90,7 +90,22 @@ export default function PersonalInfo({ user, editMode, formData, onChange }) {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
         <EditField id="pf-name" label="Full Name" value={formData?.name} onChange={(v) => onChange("name", v)} icon={User} />
-        <EditField id="pf-dob" label="Date of Birth" type="date" value={formData?.dob ? new Date(formData.dob).toISOString().split("T")[0] : ""} onChange={(v) => onChange("dob", v)} icon={Calendar} />
+        <EditField
+          id="pf-dob"
+          label="Date of Birth"
+          type="date"
+          value={(() => {
+            if (!formData?.dob) return "";
+            try {
+              const d = new Date(formData.dob);
+              return isNaN(d.getTime()) ? "" : d.toISOString().split("T")[0];
+            } catch {
+              return "";
+            }
+          })()}
+          onChange={(v) => onChange("dob", v)}
+          icon={Calendar}
+        />
         <EditField id="pf-gender" label="Gender" value={formData?.gender} onChange={(v) => onChange("gender", v)} icon={User}>
           <select
             id="pf-gender"

@@ -40,108 +40,151 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 text-slate-100">
-      <div className="w-full max-w-[520px] rounded-3xl bg-slate-900 border border-slate-800 p-8 shadow-2xl">
-        <div className="flex justify-center mb-4">
-          <div className="flex items-center gap-2 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 px-4 py-2 text-xs font-extrabold text-cyan-400 uppercase tracking-widest">
-            <Shield className="h-4 w-4" />
-            AURA OS Account Creation
-          </div>
-        </div>
-
-        <h1 className="text-3xl font-extrabold text-center text-white">Create Account</h1>
-        <p className="text-xs text-slate-400 text-center mt-2">
-          Select your portal role to customize your academic workspace
-        </p>
-
-        <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
-          {/* Step 1: Role Selection */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-              Select Your Role
-            </label>
-            <div className="grid grid-cols-2 gap-2.5">
-              {ROLES.map((r) => {
-                const Icon = r.icon;
-                const isSelected = role === r.id;
-                return (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => setRole(r.id)}
-                    className={`p-3 rounded-2xl border text-left transition relative ${
-                      isSelected
-                        ? "border-cyan-500 bg-cyan-950/40 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
-                        : "border-slate-800 bg-slate-950/60 hover:border-slate-700"
-                    }`}
-                  >
-                    {isSelected && (
-                      <div className="absolute top-2.5 right-2.5 h-4 w-4 rounded-full bg-cyan-500 flex items-center justify-center text-slate-950">
-                        <Check className="h-3 w-3 stroke-[3]" />
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <Icon className={`h-4 w-4 ${r.color.split(" ")[2]}`} />
-                      <span className="text-xs font-bold text-white">{r.label}</span>
-                    </div>
-                    <p className="text-[10px] text-slate-400 mt-1 leading-snug">{r.desc}</p>
-                  </button>
-                );
-              })}
+    <div className="min-h-screen bg-[#f6f4ff] px-4 py-8 text-slate-800 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl overflow-hidden rounded-[32px] border border-violet-200/80 bg-white/80 shadow-[0_30px_80px_rgba(76,29,149,0.12)] backdrop-blur-xl">
+        <div className="hidden w-[42%] flex-col justify-between bg-[radial-gradient(circle_at_top_left,_rgba(107,70,193,0.2),_transparent_38%),linear-gradient(135deg,#241b45_0%,#171425_25%,#111827_100%)] p-8 text-white lg:flex">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/8 ring-1 ring-white/15">
+              <Shield className="h-5 w-5 text-violet-200" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-violet-200/80">AURA OS</p>
+              <p className="text-sm text-white/80">Account Setup</p>
             </div>
           </div>
 
-          {/* Form Fields */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
-            <input
-              type="text"
-              placeholder="e.g. Alex Johnson"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-500 outline-none focus:border-cyan-500 transition"
-              required
-            />
+          <div className="space-y-6">
+            <div className="inline-flex items-center rounded-full border border-violet-300/40 bg-violet-400/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-violet-100">
+              New profile
+            </div>
+            <div>
+              <h1 className="max-w-sm text-4xl font-semibold tracking-[-0.06em] text-white">
+                Build a clearer path to academic success.
+              </h1>
+              <p className="mt-4 max-w-sm text-sm leading-7 text-slate-300">
+                Create a role-based account and connect your academic workspace to the insights that matter most.
+              </p>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">College Email</label>
-            <input
-              type="email"
-              placeholder="e.g. alex@aura.edu"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-500 outline-none focus:border-cyan-500 transition"
-              required
-            />
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-200">
+            Your account can be shaped for student, mentor, parent, or faculty workflows.
           </div>
+        </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Password</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder:text-slate-500 outline-none focus:border-cyan-500 transition"
-              required
-            />
+        <div className="flex w-full items-center justify-center p-6 sm:p-8 lg:w-[58%] lg:p-10">
+          <div className="w-full max-w-lg">
+            <div className="mb-6 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-violet-700 ring-1 ring-violet-200">
+                <Shield className="h-3.5 w-3.5" />
+                AURA OS
+              </div>
+              <Link to="/login" className="text-xs font-semibold text-slate-500 transition hover:text-violet-700">
+                Sign in
+              </Link>
+            </div>
+
+            <div className="mb-6">
+              <h1 className="text-3xl font-semibold tracking-[-0.06em] text-slate-900">Create account</h1>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Choose your role and set up your academic profile.
+              </p>
+            </div>
+
+            <form className="space-y-5" onSubmit={handleSubmit}>
+              <div>
+                <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                  Select your role
+                </label>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {ROLES.map((r) => {
+                    const Icon = r.icon;
+                    const isSelected = role === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setRole(r.id)}
+                        className={`relative rounded-2xl border p-3 text-left transition ${
+                          isSelected
+                            ? "border-violet-300 bg-violet-50 shadow-[0_10px_30px_rgba(124,58,237,0.08)]"
+                            : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white"
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute right-2.5 top-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-600 text-white">
+                            <Check className="h-3 w-3 stroke-[3]" />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <Icon className={`h-4 w-4 ${r.color.split(" ")[2]}`} />
+                          <span className="text-xs font-semibold text-slate-900">{r.label}</span>
+                        </div>
+                        <p className="mt-2 text-[10px] leading-snug text-slate-500">{r.desc}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+                  Full name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Alex Johnson"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+                  College email
+                </label>
+                <input
+                  type="email"
+                  placeholder="e.g. alex@aura.edu"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full rounded-2xl bg-[linear-gradient(135deg,#7c3aed_0%,#4f46e5_100%)] px-4 py-3 text-sm font-semibold tracking-[0.02em] text-white shadow-[0_16px_30px_rgba(124,58,237,0.25)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_34px_rgba(124,58,237,0.35)] disabled:cursor-not-allowed disabled:opacity-80"
+                disabled={loading}
+              >
+                {loading ? "Creating account..." : `Register as ${role.toUpperCase()}`}
+              </button>
+            </form>
+
+            <div className="mt-6 text-center text-sm text-slate-500">
+              Already have an account?{" "}
+              <Link className="font-semibold text-violet-700 transition hover:text-violet-800" to="/login">
+                Sign In
+              </Link>
+            </div>
           </div>
-
-          <button
-            type="submit"
-            className="w-full aura-btn aura-btn-primary py-3 text-xs font-bold"
-            disabled={loading}
-          >
-            {loading ? "Creating Account..." : `Register as ${role.toUpperCase()}`}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center text-xs text-slate-400">
-          Already have an account?{" "}
-          <Link className="text-cyan-400 hover:underline font-semibold" to="/login">
-            Sign In
-          </Link>
         </div>
       </div>
     </div>
