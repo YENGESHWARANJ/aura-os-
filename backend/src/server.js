@@ -16,7 +16,7 @@ const startServer = async () => {
     initSocketServer(server);
     await initializeNotificationQueueProcessor().catch(() => {});
 
-    server.listen(PORT, () => {
+    server.listen(PORT, "0.0.0.0", () => {
         console.log(`🚀 Server Running on Port ${PORT}`);
         startDemoSimulation();
     });
